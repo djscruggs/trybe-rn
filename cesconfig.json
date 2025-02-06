@@ -1,0 +1,55 @@
+{
+  "cesVersion": "2.12.2",
+  "projectName": "trybe-rn",
+  "packages": [
+    {
+      "name": "expo-router",
+      "type": "navigation",
+      "options": {
+        "type": "drawer + tabs"
+      }
+    },
+    {
+      "name": "nativewindui",
+      "type": "styling",
+      "options": {
+        "selectedComponents": [
+          "action-sheet",
+          "activity-indicator",
+          "activity-view",
+          "avatar",
+          "bottom-sheet",
+          "date-picker",
+          "picker",
+          "progress-indicator",
+          "ratings-indicator",
+          "slider",
+          "text",
+          "toggle"
+        ]
+      }
+    },
+    {
+      "name": "zustand",
+      "type": "state-management"
+    }
+  ],
+  "flags": {
+    "noGit": false,
+    "noInstall": false,
+    "overwrite": false,
+    "importAlias": true,
+    "packageManager": "npm",
+    "eas": false
+  },
+  "packageManager": {
+    "type": "npm",
+    "version": "10.5.1"
+  },
+  "os": {
+    "type": "Darwin",
+    "platform": "darwin",
+    "arch": "arm64",
+    "kernelVersion": "23.6.0"
+  }
+}
