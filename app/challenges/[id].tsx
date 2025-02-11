@@ -7,11 +7,16 @@ import { API_HOST } from '~/lib/environment';
 
 export default function ChallengeDetail() {
   const { id } = useLocalSearchParams();
-
   // Fetch challenge data using TanStack Query
-  const { data, error, isLoading } = useQuery(['challenge', id], async () => {
-    const response = await axios.get(`${API_HOST}/api/challenges/v/${id}`);
-    return response.data;
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['challenge', id],
+    queryFn: async () => {
+      const url = `${API_HOST}/api/challenges/v/${id}`;
+      console.log(url);
+      const response = await axios.get(url);
+      return response.data;
+    },
+    staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
   });
 
   if (isLoading) {
@@ -24,7 +29,6 @@ export default function ChallengeDetail() {
 
   return (
     <View className="mt-20 p-4">
-      <Text className="text-xl font-bold">Challenge Details for ID: {id}</Text>
       <Text className="text-lg">{data?.name}</Text>
       <Text className="text-base">{data?.description}</Text>
       {/* Add more details about the challenge here */}
