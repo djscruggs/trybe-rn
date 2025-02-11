@@ -1,5 +1,5 @@
 const { hairlineWidth, platformSelect } = require('nativewind/theme');
-
+const colors = require('tailwindcss/colors');
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   // NOTE: Update this to include the paths to all of your component files.
@@ -8,6 +8,21 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        lessblack: '#696262',
+        red: '#EC5F5C',
+        darkgrey: '#5F5F5F',
+        lightgrey: '#F7F6F6',
+        yellow: '#F5C44E',
+        blue: '#3295B7',
+        grey: '#C4C4C4',
+        salmon: '#EEAA94',
+        teal: '#1A525C',
+        white: colors.white,
+        gray: colors.slate,
+        green: colors.emerald,
+        purple: colors.violet,
+        pink: colors.fuchsia,
+        black: colors.black,
         border: withOpacity('border'),
         input: withOpacity('input'),
         ring: withOpacity('ring'),
@@ -40,6 +55,17 @@ module.exports = {
         card: {
           DEFAULT: withOpacity('card'),
           foreground: withOpacity('card-foreground'),
+        },
+        opacity: {
+          '01': '.01',
+          '02': '.02',
+          '03': '.03',
+          '04': '.04',
+          '05': '.05',
+          '06': '.06',
+          '07': '.07',
+          '08': '.08',
+          '09': '.09',
         },
       },
       borderWidth: {

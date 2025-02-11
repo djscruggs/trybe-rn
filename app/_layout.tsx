@@ -12,27 +12,41 @@ export default function TabLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: 'black',
+          tabBarActiveTintColor: 'red',
+          tabBarInactiveTintColor: 'gray',
         }}>
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Tab One',
-            tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+            title: '',
+            tabBarIcon: ({ color }) => <TabBarIcon name="trophy" color={color} />,
           }}
         />
         <Tabs.Screen
-          name="two"
+          name="new"
           options={{
-            title: 'Tab Two',
-            tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+            title: '',
+            tabBarIcon: ({ color }) => <TabBarIcon name="plus-circle" color={color} />,
           }}
         />
         <Tabs.Screen
           name="about"
           options={{
             title: 'About',
-            tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+            tabBarIcon: ({ color }) => <TabBarIcon name="lightbulb-o" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: '',
+            tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="challenges/[id]"
+          options={{
+            href: null,
           }}
         />
       </Tabs>

@@ -53,21 +53,21 @@ export default function AboutScreen() {
             <Text variant="caption2" className="pt-1 text-center">
               By pressing continue, you agree to our{' '}
               <Link href="/">
-                <Text variant="caption2" className="text-primary">
+                <Text variant="caption2" className="text-red">
                   Terms of Service
                 </Text>
               </Link>{' '}
               and that you have read our{' '}
               <Link href="/">
-                <Text variant="caption2" className="text-primary">
+                <Text variant="caption2" className="text-red">
                   Privacy Policy
                 </Text>
               </Link>
             </Text>
           </View>
           <Link href="../" replace asChild>
-            <Button size={Platform.select({ ios: 'lg', default: 'md' })}>
-              <Text>Continue</Text>
+            <Button className="bg-red" size={Platform.select({ ios: 'lg', default: 'md' })}>
+              <Text className="text-white">Continue</Text>
             </Button>
           </Link>
         </View>
