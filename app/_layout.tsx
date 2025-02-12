@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Tabs } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 import { TabBarIcon } from '~/components/TabBarIcon';
 
@@ -9,6 +10,7 @@ const queryClient = new QueryClient();
 export default function TabLayout() {
   return (
     <QueryClientProvider client={queryClient}>
+      <Toast />
       <Tabs
         screenOptions={{
           headerShown: false,
