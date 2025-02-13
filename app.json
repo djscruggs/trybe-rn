@@ -20,7 +20,8 @@
           ]
         }
       ],
-      "expo-router"
+      "expo-router",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

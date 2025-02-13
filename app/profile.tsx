@@ -19,7 +19,6 @@ import { iconMap } from '~/lib/helpers';
 import { useColorScheme } from '~/lib/useColorScheme';
 const ROOT_STYLE: ViewStyle = { flex: 1 };
 async function fetchChallenges() {
-  console.log('fetching challenges');
   const result = await fetch('http://localhost:3000/api/challenges/active');
   const data = await result.json();
   return data;

@@ -1,7 +1,9 @@
 import Feather from '@expo/vector-icons/Feather';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import * as Localization from 'expo-localization';
 import { useLocalSearchParams } from 'expo-router';
+import { DateTimeFormatOptions } from 'intl';
 import React from 'react';
 import {
   Text,
@@ -12,15 +14,19 @@ import {
   Image,
   Clipboard,
 } from 'react-native';
+import Share from 'react-native-share';
 
 import { MemberContextProvider, useMemberContext } from '~/contexts/member-context';
 import { API_HOST } from '~/lib/environment';
-import { iconMap, calculateDuration } from '~/lib/helpers';
+import { iconMap, calculateDuration, textToJSX } from '~/lib/helpers';
 import { getShortUrl } from '~/lib/helpers/challenge';
 import { Challenge } from '~/lib/types';
+
 export default function ChallengeDetail() {
   const { membership, setMembership } = useMemberContext();
   const { id } = useLocalSearchParams();
+  const [activeView, setActiveView] = React.useState('About'); // State to track active view
+
   // Fetch challenge data using TanStack Query
   const {
     data: challenge,
@@ -35,7 +41,6 @@ export default function ChallengeDetail() {
     },
     staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
   });
-  // fetch member challenge data using TanStack Query
 
   if (isLoading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
@@ -45,10 +50,40 @@ export default function ChallengeDetail() {
     return <Text className="text-red-500">Error loading challenge details</Text>;
   }
 
+  const renderActiveView = () => {
+    switch (activeView) {
+      case 'About':
+        return <ChallengeDetailView challenge={challenge} setActiveView={setActiveView} />;
+      case 'Program':
+        return <ProgramView challenge={challenge} />;
+      case 'Progress':
+        return <ProgressView challenge={challenge} />;
+      case 'Chat':
+        return <ChatView challenge={challenge} />;
+      default:
+        return <ChallengeDetailView challenge={challenge} />;
+    }
+  };
+
   return (
     <MemberContextProvider membership={membership ?? null} setMembership={setMembership}>
-      <View className="mt-20 p-4">
-        <ChallengeDetailView challenge={challenge} />
+      <View className="mt-20 p-2">
+        {/* Header Section */}
+        <View className="mb-5 rounded-md bg-white p-2">
+          <View className="mb-4 flex-row items-center">
+            <View className="mr-2 break-words">
+              <Image
+                source={iconMap[challenge.icon as keyof typeof iconMap]}
+                className={`h-10 w-10 rounded-full border border-solid ${
+                  challenge.color ? `border-${challenge.color}` : ''
+                }`}
+              />
+            </View>
+            <Text className="break-words text-lg font-bold">{challenge.name}</Text>
+          </View>
+          <ChallengeDetailNavigation setActiveView={setActiveView} />
+          {renderActiveView()}
+        </View>
       </View>
     </MemberContextProvider>
   );
@@ -57,33 +92,23 @@ export default function ChallengeDetail() {
 const ChallengeDetailView = ({ challenge }: { challenge: Challenge }) => {
   const { membership } = useMemberContext();
   const handleCopy = () => {
-    alert(getShortUrl(challenge, membership));
+    const url = getShortUrl(challenge, membership);
+    Share.open({
+      url,
+    });
   };
+  const dateOptions: DateTimeFormatOptions = {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  };
+  const locale = Localization.getLocales()[0]?.languageTag;
   return (
-    <View className="bg-white p-4">
-      {/* Header Section */}
-      <View className="mb-5">
-        <View className="mb-4 flex-row items-center">
-          <View className="mr-2">
-            {/* Replace with your actual icon component */}
-            <Image
-              source={iconMap[challenge.icon as keyof typeof iconMap]}
-              style={{
-                width: 40,
-                height: 40,
-                borderWidth: 1,
-                borderColor: challenge.color,
-                borderRadius: 20,
-              }}
-            />
-          </View>
-          <Text className="text-xl font-bold">{challenge.name}</Text>
-        </View>
-        <ChallengeDetailNavigation challenge={challenge} />
-      </View>
-
+    <View className="bg-white p-2">
       {/* Description Section */}
-      <Text className="mb-6 text-base leading-6 text-gray-700">{challenge.description}</Text>
+      <Text className="mb-6 text-base leading-6 text-gray-700">
+        {textToJSX(challenge.description ?? '')}
+      </Text>
 
       {/* Program Details */}
       <View className="mb-6">
@@ -97,7 +122,7 @@ const ChallengeDetailView = ({ challenge }: { challenge: Challenge }) => {
           </View>
           <View className="flex-1">
             <Text className="mb-1 text-sm text-gray-500">Duration</Text>
-            <Text className="text-base text-black">{calculateDuration(challenge)}</Text>
+            <Text className="text-base text-black">{calculateDuration(challenge)} days</Text>
           </View>
         </View>
 
@@ -105,7 +130,11 @@ const ChallengeDetailView = ({ challenge }: { challenge: Challenge }) => {
           <View className="flex-1">
             <Text className="mb-1 text-sm text-gray-500">Started</Text>
             <View className="flex-row items-center">
-              <Text className="text-base text-black">{challenge.startAt}</Text>
+              <Text className="text-base text-black">
+                {challenge.startAt
+                  ? new Date(challenge.startAt).toLocaleDateString(locale, dateOptions)
+                  : ''}
+              </Text>
               <TouchableOpacity>
                 <Text className="ml-2 text-sm text-red-400">edit</Text>
               </TouchableOpacity>
@@ -140,16 +169,48 @@ const ChallengeDetailView = ({ challenge }: { challenge: Challenge }) => {
   );
 };
 
-const ChallengeDetailNavigation = ({ challenge }) => {
+const ChallengeDetailNavigation = ({
+  setActiveView,
+}: {
+  setActiveView: (view: string) => void;
+}) => {
   return (
     <View className="mb-4 flex-row items-center justify-between">
-      <Text className="border-b-2 border-black text-black">About</Text>
-      <Text className="text-gray-500">Program</Text>
-      <Text className="text-gray-500">Progress</Text>
-      <Text className="text-gray-500">Chat</Text>
+      <Text onPress={() => setActiveView('About')} className="border-b-2 border-black text-black">
+        About
+      </Text>
+      <Text onPress={() => setActiveView('Program')} className="text-gray-500">
+        Program
+      </Text>
+      <Text onPress={() => setActiveView('Progress')} className="text-gray-500">
+        Progress
+      </Text>
+      <Text onPress={() => setActiveView('Chat')} className="text-gray-500">
+        Chat
+      </Text>
       <TouchableOpacity className="bg-red rounded-full p-1">
         <Text className="text-xs text-white">Check In</Text>
       </TouchableOpacity>
     </View>
   );
+};
+
+const ProgramView = ({ challenge }: { challenge: Challenge }) => {
+  return <Text>Program View</Text>;
+};
+
+const ProgressView = ({ challenge }: { challenge: Challenge }) => {
+  const { membership } = useMemberContext();
+  if (!membership) {
+    return <Text>You need to create an account to view your progress.</Text>;
+  }
+  return <Text>Progress View</Text>;
+};
+
+const ChatView = ({ challenge }: { challenge: Challenge }) => {
+  const { membership } = useMemberContext();
+  if (!membership) {
+    return <Text>You need to create an account to participate in the chat.</Text>;
+  }
+  return <Text>Chat View</Text>;
 };

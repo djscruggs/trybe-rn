@@ -7,6 +7,7 @@ import { GiShinyApple, GiMeditation } from 'react-icons/gi';
 import { IoFishOutline } from 'react-icons/io5';
 import { PiBarbellLight } from 'react-icons/pi';
 import { RiMentalHealthLine } from 'react-icons/ri';
+import { Text, View, TouchableOpacity, Linking } from 'react-native';
 import toast from 'react-native-toast-message';
 
 import type { CurrentUser, User } from './types';
@@ -29,14 +30,14 @@ export const iconMap = {
 };
 
 export const calculateDuration = (challenge: any) => {
-  console.log(challenge.id, challenge.type);
   if (challenge.type === 'SELF_LED') {
     return `${challenge.numDays} days`;
   }
   const startDate = new Date(challenge.startAt);
   const endDate = new Date(challenge.endAt);
-  const duration = endDate.getTime() - startDate.getTime();
-  return duration;
+  const durationInMilliseconds = endDate.getTime() - startDate.getTime();
+  const durationInDays = Math.round(durationInMilliseconds / (1000 * 60 * 60 * 24));
+  return durationInDays;
 };
 export const copyToClipboard = async (text: string): Promise<void> => {
   try {
@@ -199,14 +200,12 @@ interface LinksToFormat {
   keyPrefix: string;
 }
 export function formatLinks(props: LinksToFormat): JSX.Element[] {
-  const { links, keyPrefix } = props;
-  if (!links || links.length === 0) return <></>;
-  return links.map((link, index) => (
-    <div className="text-blue mt-4" key={`${keyPrefix}-link-${index}`}>
-      <a href={link} target="_blank" rel="noreferrer">
-        {link}
-      </a>
-    </div>
+  const { links } = props;
+  if (!links || links.length === 0) return [];
+  return links.map((link) => (
+    <TouchableOpacity onPress={() => Linking.openURL(link)}>
+      <Text className="text-blue mt-4">{link}</Text>
+    </TouchableOpacity>
   ));
 }
 
@@ -226,7 +225,7 @@ export function iconToJsx(icon: string, color: string): React.ReactNode {
   } else {
     toUse = iconMap[icon];
   }
-  return <div className={iconStyle(color)}>{toUse}</div>;
+  return <Text className={iconStyle(color)}>{toUse}</Text>;
 }
 
 export function resizeImageToFit(width: number, height: number, maxSize: number = 300): number[] {
@@ -260,14 +259,17 @@ export function textToJSX(text: string | undefined, textOnly = false): React.Rea
     return link.replace(youtubeRegex, '');
   });
   return (
-    <div>
-      {textWithoutLinks?.split('\n').map((line: string, index: number) => (
-        <React.Fragment key={index}>
-          <p style={{ marginTop: index > 0 ? '.25rem' : '0' }}>{convertTextToJSXAnchors(line)}</p>
-        </React.Fragment>
-      ))}
+    <View>
+      {textWithoutLinks?.split('\n').map((line: string, index: number) => {
+        if (line.trim() === '') return null;
+        return (
+          <React.Fragment key={index}>
+            <Text className={index > 0 ? 'mt-1' : ''}>{convertTextToJSXAnchors(line)}</Text>
+          </React.Fragment>
+        );
+      })}
       {!textOnly && formatLinks({ links: strippedLinks ?? [], keyPrefix: 'text-to-jsx' })}
-    </div>
+    </View>
   );
 }
 export function convertTextToJSXAnchors(text: string): React.ReactNode {
