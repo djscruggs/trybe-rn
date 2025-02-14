@@ -13,6 +13,7 @@ import {
   TextInput,
   Image,
   Clipboard,
+  ScrollView,
 } from 'react-native';
 import Share from 'react-native-share';
 
@@ -26,7 +27,10 @@ export default function ChallengeDetail() {
   const { membership, setMembership } = useMemberContext();
   const { id } = useLocalSearchParams();
   const [activeView, setActiveView] = React.useState('About'); // State to track active view
-
+  // Reset activeView to 'About' whenever the challenge id changes
+  React.useEffect(() => {
+    setActiveView('About');
+  }, [id]);
   // Fetch challenge data using TanStack Query
   const {
     data: challenge,
@@ -53,7 +57,7 @@ export default function ChallengeDetail() {
   const renderActiveView = () => {
     switch (activeView) {
       case 'About':
-        return <ChallengeDetailView challenge={challenge} setActiveView={setActiveView} />;
+        return <ChallengeDetailView challenge={challenge} />;
       case 'Program':
         return <ProgramView challenge={challenge} />;
       case 'Progress':
@@ -67,24 +71,26 @@ export default function ChallengeDetail() {
 
   return (
     <MemberContextProvider membership={membership ?? null} setMembership={setMembership}>
-      <View className="mt-20 p-2">
-        {/* Header Section */}
-        <View className="mb-5 rounded-md bg-white p-2">
-          <View className="mb-4 flex-row items-center">
-            <View className="mr-2 break-words">
-              <Image
-                source={iconMap[challenge.icon as keyof typeof iconMap]}
-                className={`h-10 w-10 rounded-full border border-solid ${
-                  challenge.color ? `border-${challenge.color}` : ''
-                }`}
-              />
+      <ScrollView className="p-2">
+        <View className="mt-20 p-2">
+          {/* Header Section */}
+          <View className="mb-5 rounded-md bg-white p-2">
+            <View className="mb-4 flex-row items-center">
+              <View className="mr-2 break-words">
+                <Image
+                  source={iconMap[challenge.icon as keyof typeof iconMap]}
+                  className={`h-10 w-10 rounded-full border border-solid ${
+                    challenge.color ? `border-${challenge.color}` : ''
+                  }`}
+                />
+              </View>
+              <Text className="break-words text-lg font-bold">{challenge.name}</Text>
             </View>
-            <Text className="break-words text-lg font-bold">{challenge.name}</Text>
+            <ChallengeDetailNavigation setActiveView={setActiveView} />
+            {renderActiveView()}
           </View>
-          <ChallengeDetailNavigation setActiveView={setActiveView} />
-          {renderActiveView()}
         </View>
-      </View>
+      </ScrollView>
     </MemberContextProvider>
   );
 }
@@ -196,7 +202,38 @@ const ChallengeDetailNavigation = ({
 };
 
 const ProgramView = ({ challenge }: { challenge: Challenge }) => {
-  return <Text>Program View</Text>;
+  const { id } = useLocalSearchParams();
+
+  // Fetch program data for the challenge
+  const {
+    data: program,
+    error: programError,
+    isLoading: isProgramLoading,
+  } = useQuery({
+    queryKey: ['challengeProgram', id],
+    queryFn: async () => {
+      const url = `${API_HOST}/api/challenges/v/${id}/program`;
+      const response = await axios.get(url);
+      return response.data;
+    },
+    staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
+  });
+
+  if (isProgramLoading) {
+    return <ActivityIndicator size="small" color="#C4C4C4" />;
+  }
+
+  if (programError) {
+    return <Text className="text-red-500">Error loading program details</Text>;
+  }
+
+  return (
+    <View>
+      <Text>Program View</Text>
+      {/* Render program details here */}
+      <Text>{JSON.stringify(program)}</Text>
+    </View>
+  );
 };
 
 const ProgressView = ({ challenge }: { challenge: Challenge }) => {
