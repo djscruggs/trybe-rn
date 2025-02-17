@@ -1,16 +1,15 @@
-import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useLocalSearchParams } from 'expo-router';
+import { Link, useLocalSearchParams, router } from 'expo-router';
 import React from 'react';
-import { View, Text, ActivityIndicator, Button } from 'react-native';
-import { useSearchParams } from 'react-router-dom';
+import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 
+import { useMemberContext } from '~/contexts/member-context';
 import { API_HOST } from '~/lib/environment';
 
 export default function PostDetail() {
-  const navigation = useNavigation();
   const { postId } = useLocalSearchParams();
+  const { challenge } = useMemberContext();
   const {
     data: post,
     error,
@@ -34,16 +33,21 @@ export default function PostDetail() {
         </View>
       ) : (
         <View className="p-2">
-          <Text className="text-xl font-bold">Post ID: {post.id}</Text>
           <Text className="text-xl font-bold">Post Title: {post.title}</Text>
-          <Text className="text-xl font-bold">Post Content: {post.content}</Text>
+          <Text className="text-xl font-bold">Post Content: {post.body}</Text>
 
           {/* Add more details or components related to the post here */}
-          <Button
-            title="Back"
-            onPress={() => navigation.goBack()}
-            className="bg-blue-500 mt-4 rounded p-2 text-white"
-          />
+          {challenge?.id && (
+            <View className="mt-10 flex items-center justify-center">
+              <Link href={`/challenges/${challenge.id.toString()}/program` as any}>
+                <TouchableOpacity
+                  className="mt-10 rounded-full bg-red p-1 px-2"
+                  onPress={() => router.push(`/challenges/${challenge.id?.toString()}/program`)}>
+                  <Text className="text-xs text-white">Back</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          )}
         </View>
       )}
     </>

@@ -204,7 +204,7 @@ export function formatLinks(props: LinksToFormat): JSX.Element[] {
   if (!links || links.length === 0) return [];
   return links.map((link) => (
     <TouchableOpacity onPress={() => Linking.openURL(link)}>
-      <Text className="text-blue mt-4">{link}</Text>
+      <Text className="mt-4 text-blue">{link}</Text>
     </TouchableOpacity>
   ));
 }

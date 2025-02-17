@@ -46,6 +46,12 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="challenges/[id]"
+          options={{
+            href: null,
+          }}
+        />
+        {/* <Tabs.Screen
           name="challenges/[id]/about"
           options={{
             href: null,
@@ -58,7 +64,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="challenges/[id]/index"
+          name="challenges/[id]/post"
           options={{
             href: null,
           }}
@@ -75,14 +81,7 @@ export default function TabLayout() {
           options={{
             href: null,
           }}
-        />
-
-        <Tabs.Screen
-          name="posts/[id]"
-          options={{
-            href: null,
-          }}
-        />
+        /> */}
       </Tabs>
     </QueryClientProvider>
   );

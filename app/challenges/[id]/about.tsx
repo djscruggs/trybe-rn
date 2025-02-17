@@ -34,8 +34,10 @@ export default function ChallengeAbout() {
           <View className="flex-1">
             <Text className="mb-1 text-sm text-gray-500">Frequency</Text>
             <Text className="text-base text-black">
-              {challenge?.frequency.charAt(0).toUpperCase() +
-                challenge?.frequency.slice(1).toLowerCase()}
+              {challenge?.frequency
+                ? challenge.frequency.charAt(0).toUpperCase() +
+                  challenge.frequency.slice(1).toLowerCase()
+                : ''}
             </Text>
           </View>
           <View className="flex-1">
@@ -61,7 +63,21 @@ export default function ChallengeAbout() {
           <View className="flex-1">
             <Text className="mb-1 text-sm text-gray-500">Reminder Time</Text>
             <View className="flex-row items-center">
-              <Text className="text-base text-black">{challenge?.reminderTime}</Text>
+              <Text className="text-base text-black">
+                {new Intl.DateTimeFormat(locale, {
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: true,
+                }).format(
+                  new Date(
+                    0,
+                    0,
+                    0,
+                    membership?.notificationHour ?? 0,
+                    membership?.notificationMinute ?? 0
+                  )
+                )}
+              </Text>
               <TouchableOpacity>
                 <Text className="text-red-400 ml-2 text-sm">edit</Text>
               </TouchableOpacity>
