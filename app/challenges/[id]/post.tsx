@@ -4,20 +4,21 @@ import axios from 'axios';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { View, Text, ActivityIndicator, Button } from 'react-native';
+import { useSearchParams } from 'react-router-dom';
 
 import { API_HOST } from '~/lib/environment';
 
 export default function PostDetail() {
   const navigation = useNavigation();
-  const { id } = useLocalSearchParams();
+  const { postId } = useLocalSearchParams();
   const {
     data: post,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['challenge', id],
+    queryKey: ['challenge', postId],
     queryFn: async () => {
-      const url = `${API_HOST}/api/posts/v/${id}`;
+      const url = `${API_HOST}/api/posts/v/${postId}`;
       const response = await axios.get(url);
       return response.data;
     },
@@ -32,7 +33,7 @@ export default function PostDetail() {
           {error && <Text className="text-red-500">Error loading challenge details</Text>}
         </View>
       ) : (
-        <View className="mt-20 p-2">
+        <View className="p-2">
           <Text className="text-xl font-bold">Post ID: {post.id}</Text>
           <Text className="text-xl font-bold">Post Title: {post.title}</Text>
           <Text className="text-xl font-bold">Post Content: {post.content}</Text>

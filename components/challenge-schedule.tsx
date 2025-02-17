@@ -262,7 +262,10 @@ const PostsBlock = ({
     <>
       {(isPublished() || currentUser?.id === challenge.userId) && (
         <>
-          <Link href={`/posts/${post.id}`} key={post.id} style={{ marginBottom: 10 }}>
+          <Link
+            href={`/challenges/${challenge.id}/post?postId=${post.id}`}
+            key={post.id}
+            style={{ marginBottom: 10 }}>
             <Text
               key={post.id}
               className={`${isSchedule ? 'text-xs' : 'block text-xl'} mb-1 w-full overflow-hidden text-ellipsis text-black ${linkable ? 'cursor-pointer underline' : ''}`}>
