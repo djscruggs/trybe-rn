@@ -46,7 +46,39 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="challenges/[id]"
+          name="challenges/[id]/about"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="challenges/[id]/chat"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="challenges/[id]/index"
+          options={{
+            href: null,
+          }}
+        />
+
+        <Tabs.Screen
+          name="challenges/[id]/program"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="challenges/[id]/progress"
+          options={{
+            href: null,
+          }}
+        />
+
+        <Tabs.Screen
+          name="posts/[id]"
           options={{
             href: null,
           }}

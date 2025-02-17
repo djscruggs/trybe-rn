@@ -3,11 +3,12 @@ import { createContext, type ReactNode, useContext, useState } from 'react';
 
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { API_HOST } from '~/lib/environment';
-import { type MemberChallenge, type CheckIn } from '~/lib/types';
+import { type MemberChallenge, type CheckIn, Challenge } from '~/lib/types';
 
 export interface MemberContextType {
   membership: MemberChallenge | null;
   setMembership: React.Dispatch<React.SetStateAction<MemberChallenge | null>>;
+  challenge: Challenge | null;
   refreshUserCheckIns: () => Promise<CheckIn[]>;
   getUserCheckIns: () => CheckIn[];
   loading: boolean;
@@ -17,6 +18,7 @@ export interface MemberContextType {
 const defaultValues: MemberContextType = {
   membership: null,
   setMembership: () => {},
+  challenge: null,
   refreshUserCheckIns: async () => [],
   getUserCheckIns: () => [],
   loading: false,
@@ -29,12 +31,14 @@ interface MemberContextProviderProps {
   children: ReactNode;
   membership: MemberChallenge | null;
   setMembership: React.Dispatch<React.SetStateAction<MemberChallenge | null>>;
+  challenge: Challenge | null;
 }
 
 export const MemberContextProvider = ({
   children,
   membership,
   setMembership,
+  challenge,
 }: MemberContextProviderProps): JSX.Element => {
   const { currentUser } = useCurrentUser();
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
@@ -73,7 +77,15 @@ export const MemberContextProvider = ({
 
   return (
     <MemberContext.Provider
-      value={{ membership, setMembership, refreshUserCheckIns, getUserCheckIns, loading, updated }}>
+      value={{
+        membership,
+        setMembership,
+        refreshUserCheckIns,
+        getUserCheckIns,
+        loading,
+        updated,
+        challenge,
+      }}>
       {children}
     </MemberContext.Provider>
   );

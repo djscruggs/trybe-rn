@@ -1,4 +1,3 @@
-import { useNavigate, Link } from '@remix-run/react';
 import {
   eachDayOfInterval,
   startOfWeek,
@@ -8,20 +7,20 @@ import {
   isFuture,
   addDays,
 } from 'date-fns';
+import { Link } from 'expo-router';
 import { useContext } from 'react';
 import { BsExclamationCircleFill } from 'react-icons/bs';
 import { HiMiniPlusSmall } from 'react-icons/hi2';
 import { Text, View, TouchableOpacity, Linking } from 'react-native';
 
-import { CurrentUserContext } from '~/contexts/currentuser-context';
+import { CurrentUserContext, useCurrentUser } from '~/contexts/currentuser-context';
 import { userLocale, pluralize } from '~/lib/helpers';
 import { hasStarted } from '~/lib/helpers/challenge';
 import type { Challenge, CurrentUser, MemberChallenge, Post } from '~/lib/types';
-
 interface ChallengeScheduleProps {
   challenge: Challenge;
   posts: Post[];
-  isSchedule?: boolean; // if true, this is the scheduling page for the creator, and we should show all posts and empty days
+  isSchedule?: boolean; // if true  , this is the scheduling page for the creator, and we should show all posts and empty days
   membership: MemberChallenge | null;
 }
 
@@ -33,11 +32,10 @@ export default function ChallengeSchedule({
 }: ChallengeScheduleProps): JSX.Element {
   // Need to capture any dangling posts that are unscheduled in the date range
   const unscheduled: Post[] = [];
-
   // create arrays of posts by day number and those that are unscheduled
   const { currentUser } = useContext(CurrentUserContext);
   const userIsCreator = currentUser?.id === challenge.userId;
-  if (challenge.type === 'SELF_LED') {
+  if (challenge.type === 'SELF_LED' && posts) {
     posts.forEach((post) => {
       if (!post.publishOnDayNumber) {
         unscheduled.push(post);
@@ -45,8 +43,7 @@ export default function ChallengeSchedule({
     });
   }
   return (
-    <Text
-      className={`border-red  w-screen max-w-2xl flex-col items-center  ${isSchedule ? 'md:max-w-xl lg:max-w-2xl' : 'md:max-w-md lg:max-w-lg'}`}>
+    <View className="w-full">
       {(userIsCreator || currentUser?.role === 'ADMIN') && <UnscheduledPosts posts={unscheduled} />}
       {isSchedule && <ScheduleDateRange challenge={challenge} />}
       {challenge.type === 'SCHEDULED' && (
@@ -65,7 +62,7 @@ export default function ChallengeSchedule({
           membership={membership}
         />
       )}
-    </Text>
+    </View>
   );
 }
 
@@ -123,7 +120,7 @@ const DateSchedule = ({
               {(postsByDayNum[dayNum] || isSchedule) && (
                 <Text
                   key={day.toISOString()}
-                  className={`relative h-24  p-2   ${isInRange ? ' bg-lightgrey border border-[#CECECE]' : 'hidden bg-white md:block'}`}>
+                  className={`relative h-24  p-2   ${isInRange ? ' border border-[#CECECE] bg-lightgrey' : 'hidden bg-white md:block'}`}>
                   <Text className="absolute left-0 top-0 m-1 text-xs">
                     <Text className={`${isSchedule ? 'md:hidden' : ''}`}>
                       {day.toLocaleDateString(locale, {
@@ -171,6 +168,9 @@ const NumberSchedule = ({
   isSchedule: boolean;
   membership: MemberChallenge | null;
 }): JSX.Element => {
+  if (!posts) {
+    return <></>;
+  }
   const postsByDayNum = posts.reduce<Record<number, Post[]>>((acc, post) => {
     const publishOnDayNumber = post.publishOnDayNumber; // Assuming this property exists
     if (Number(publishOnDayNumber) > 0) {
@@ -181,20 +181,21 @@ const NumberSchedule = ({
     }
     return acc;
   }, {});
-  const { currentUser } = useContext(CurrentUserContext);
+  const { currentUser } = useCurrentUser();
   const userIsCreator = currentUser?.id === challenge.userId;
   const numDays = challenge.numDays ?? 0; // Default to 0 if numDays is null or undefined
   return (
-    <Text
-      className={`max-w-screen w-full px-4 md:px-0  ${isSchedule ? 'md:max-w-xl lg:max-w-2xl' : 'md:max-w-md lg:max-w-lg'}`}>
-      <Text className={`${isSchedule ? 'md:grid' : ''}  mt-4 w-full grid-cols-7 gap-2`}>
+    <View className="w-full px-4 md:px-0">
+      <View className={`${isSchedule ? 'md:grid' : ''}  mt-4 w-full grid-cols-7 gap-2`}>
         {Array.from({ length: numDays }, (_, index) => (
           <Text
             key={index}
-            className="bg-lightgrey border-[#CECECE]' relative flex h-24 flex-col items-center justify-center  border  border-gray-300 p-2  text-center">
+            className="border-[#CECECE]' relative flex h-24 flex-col items-center justify-center border  border-gray-300  bg-lightgrey p-2  text-center">
             {!postsByDayNum[index + 1] && <>Day {index + 1}</>}
             {postsByDayNum[index + 1]?.map((post) => (
-              <Text className="flex h-full items-center justify-center" key={post.id}>
+              <Text
+                className="flex h-full items-center justify-center"
+                key={`${challenge.id} - ${post.id}`}>
                 <PostsBlock
                   post={post}
                   isSchedule={isSchedule}
@@ -209,8 +210,9 @@ const NumberSchedule = ({
             )}
           </Text>
         ))}
-      </Text>
-    </Text>
+      </View>
+      <Text>{JSON.stringify(postsByDayNum)}</Text>
+    </View>
   );
 };
 
@@ -226,7 +228,6 @@ const PostsBlock = ({
   membership: MemberChallenge | null;
 }): JSX.Element => {
   const { currentUser } = useContext(CurrentUserContext);
-  const navigate = useNavigate();
   // if post is in the future, don't link to the full post UNLESS it's the user's post
   let linkable = false;
   const started = hasStarted(challenge, membership);
@@ -243,12 +244,10 @@ const PostsBlock = ({
       linkable = true;
     }
   }
+  linkable = true;
   if (currentUser?.id === post.userId || currentUser?.role === 'ADMIN') {
     linkable = true;
   }
-  const goToPost = (): void => {
-    navigate(`/posts/${post.id}`);
-  };
 
   const isPublished = (): boolean => {
     if (challenge.type === 'SELF_LED') {
@@ -263,12 +262,13 @@ const PostsBlock = ({
     <>
       {(isPublished() || currentUser?.id === challenge.userId) && (
         <>
-          <Text
-            key={post.id}
-            className={`${isSchedule ? 'text-xs' : 'flex h-full items-center text-xl'} mb-1 w-full overflow-hidden text-ellipsis text-black ${linkable ? 'cursor-pointer underline' : ''}`}
-            onPress={linkable ? goToPost : undefined}>
-            {post.title}
-          </Text>
+          <Link href={`/posts/${post.id}`} key={post.id} style={{ marginBottom: 10 }}>
+            <Text
+              key={post.id}
+              className={`${isSchedule ? 'text-xs' : 'block text-xl'} mb-1 w-full overflow-hidden text-ellipsis text-black ${linkable ? 'cursor-pointer underline' : ''}`}>
+              {post.title}
+            </Text>
+          </Link>
           <DraftBadge published={isPublished()} />
         </>
       )}
@@ -277,7 +277,7 @@ const PostsBlock = ({
 };
 function DraftBadge({ published }: { published: boolean }): JSX.Element {
   if (!published) {
-    return <Text className="text-yellow ml-2 text-sm">Draft</Text>;
+    return <Text className="ml-2 text-sm text-yellow">Draft</Text>;
   }
   return <></>;
 }
@@ -299,7 +299,7 @@ const NewPostLink = ({ day, challenge }: { day: number; challenge: Challenge }):
   return (
     <Text className="-mt-3 flex h-full w-full cursor-pointer items-start justify-center pt-6">
       <HiMiniPlusSmall
-        className="text-red hover:bg-red  h-8 w-8 rounded-full bg-white hover:text-white"
+        className="h-8 w-8  rounded-full bg-white text-red hover:bg-red hover:text-white"
         onClick={newPost}
       />
     </Text>
@@ -312,14 +312,21 @@ const UnscheduledPosts = ({ posts }: { posts: Post[] }): JSX.Element => {
   }
   return (
     <Text className="my-2 rounded-md p-2">
-      <BsExclamationCircleFill className="text-red -mt-1  mr-2 inline-block h-4 w-4" />
+      <BsExclamationCircleFill className="-mt-1 mr-2  inline-block h-4 w-4 text-red" />
       There {pluralize(posts.length, 'is', 'are')} {posts.length} unscheduled{' '}
       {pluralize(posts.length, 'post', 'posts')}.
       {posts.map((post) => {
         return (
-          <Link to={`/posts/${post.id}/edit`} key={post.id}>
-            <Text className="cursor-pointer underline">{post.title}</Text>
-          </Link>
+          <View>
+            {posts.map((post) => (
+              <Link
+                key={post.id}
+                href={`/challenges/${post.challengeId}/posts/${post.id}`}
+                style={{ marginBottom: 10 }}>
+                <Text>{post.title}</Text>
+              </Link>
+            ))}
+          </View>
         );
       })}
     </Text>
@@ -327,10 +334,7 @@ const UnscheduledPosts = ({ posts }: { posts: Post[] }): JSX.Element => {
 };
 
 const ScheduleDateRange = ({ challenge }: { challenge: Challenge }): JSX.Element => {
-  if (challenge.type === 'SELF_LED') {
-    return <></>;
-  }
-  const { currentUser } = useContext(CurrentUserContext);
+  const { currentUser } = useCurrentUser();
   const locale = userLocale(currentUser);
   // function to format the date for the challenge start and end dates
   const formattedDate = (date: Date): string => {
@@ -342,6 +346,10 @@ const ScheduleDateRange = ({ challenge }: { challenge: Challenge }): JSX.Element
   };
   const startDate = new Date(challenge?.startAt as unknown as Date);
   const endDate = new Date(challenge?.endAt as unknown as Date);
+  if (challenge.type === 'SELF_LED') {
+    return <></>;
+  }
+
   return (
     <Text className="mt-4 w-full">
       {formattedDate(startDate)} to {formattedDate(endDate)}

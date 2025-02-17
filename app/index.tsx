@@ -54,7 +54,7 @@ export default function Home() {
               <TouchableOpacity
                 key={challenge.id}
                 className="mb-4 flex-row items-center gap-4"
-                onPress={() => router.push(`challenges/${challenge.id}` as any)}>
+                onPress={() => router.push(`challenges/${challenge.id}/about` as any)}>
                 <Image
                   source={iconMap[challenge.icon as keyof typeof iconMap]}
                   style={{
