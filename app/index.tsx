@@ -33,11 +33,8 @@ export default function Home() {
   const { colors } = useColorScheme();
   const router = useRouter();
 
-  if (isLoading) return <Text>Loading...</Text>;
-  if (error) return <Text>Error loading challenges</Text>;
-
   // Ensure data is an array before mapping
-  const challenges = Array.isArray(data.challenges) ? data.challenges : [];
+  const challenges = Array.isArray(data?.challenges) ? data.challenges : [];
   return (
     <SafeAreaView style={ROOT_STYLE}>
       <ScrollView className="bg-white">
@@ -50,7 +47,9 @@ export default function Home() {
             </Text>
           </View>
           <View>
-            {challenges.map((challenge: any) => (
+            {isLoading && <Text>Loading...</Text>}
+            {error && <Text>Error loading challenges</Text>}
+            {challenges?.map((challenge: any) => (
               <TouchableOpacity
                 key={challenge.id}
                 className="mb-4 flex-row items-center gap-4"

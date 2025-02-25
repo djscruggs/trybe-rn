@@ -12,6 +12,8 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@clerk/clerk-expo": "^2.7.8",
+    "@clerk/types": "^4.46.1",
     "@expo/react-native-action-sheet": "^4.1.0",
     "@expo/vector-icons": "^14.0.0",
     "@gorhom/bottom-sheet": "^4.6.4",
@@ -39,6 +41,7 @@
     "expo-localization": "~16.0.1",
     "expo-navigation-bar": "~4.0.7",
     "expo-router": "~4.0.6",
+    "expo-secure-store": "^14.0.1",
     "expo-status-bar": "~2.0.1",
     "expo-store-review": "~8.0.1",
     "expo-system-ui": "~4.0.7",
@@ -58,7 +61,9 @@
     "react-native-share": "^12.0.7",
     "react-native-toast-message": "^2.2.1",
     "react-native-uitextview": "^1.1.4",
+    "react-native-user-avatar": "^1.0.8",
     "react-native-web": "~0.19.10",
+    "react-native-youtube": "^2.0.2",
     "tailwind-merge": "^2.2.1",
     "zustand": "^4.5.1"
   },

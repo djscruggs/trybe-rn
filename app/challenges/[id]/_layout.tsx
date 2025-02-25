@@ -2,7 +2,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import * as Localization from 'expo-localization';
-import { useLocalSearchParams, Slot, Link, router } from 'expo-router';
+import { useLocalSearchParams, Slot, Link, router, useRouter, usePathname } from 'expo-router';
 import { DateTimeFormatOptions } from 'intl';
 import React from 'react';
 import {
@@ -26,6 +26,8 @@ import { Challenge, MemberChallenge } from '~/lib/types';
 export default function ChallengeLayout() {
   const { membership, setMembership } = useMemberContext();
   const { id } = useLocalSearchParams();
+  const router = useRouter();
+  const path = usePathname();
 
   // Fetch challenge data using TanStack Query
   const {
@@ -41,6 +43,7 @@ export default function ChallengeLayout() {
     },
     staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
   });
+  const isCurrentRoute = (part: string) => path.includes(part);
 
   if (isLoading) return <ActivityIndicator size="small" color="#C4C4C4" />;
   if (error) return <Text className="text-red-500">Error loading challenge details</Text>;
@@ -70,16 +73,26 @@ export default function ChallengeLayout() {
             <View className="mb-4 flex-row items-center justify-between">
               <Link
                 href={`/challenges/${challenge.id}/about`}
-                className="border-b-2 border-black text-black">
+                className={`${isCurrentRoute(`/about`) ? 'font-bold text-red' : 'text-gray-500'}`}>
                 About
               </Link>
-              <Link href={`/challenges/${challenge.id}/program`} className="text-gray-500">
+              <Link
+                href={`/challenges/${challenge.id}/program`}
+                className={`${
+                  isCurrentRoute(`/program`) ? 'font-bold text-red' : 'text-gray-500'
+                }`}>
                 Program
               </Link>
-              <Link href={`/challenges/${challenge.id}/progress`} className="text-gray-500">
+              <Link
+                href={`/challenges/${challenge.id}/progress`}
+                className={`${
+                  isCurrentRoute(`/progress`) ? 'font-bold text-red' : 'text-gray-500'
+                }`}>
                 Progress
               </Link>
-              <Link href={`/challenges/${challenge.id}/chat`} className="text-gray-500">
+              <Link
+                href={`/challenges/${challenge.id}/chat`}
+                className={`${isCurrentRoute(`/chat`) ? 'font-bold text-red' : 'text-gray-500'}`}>
                 Chat
               </Link>
               <TouchableOpacity className="rounded-full bg-red p-1">

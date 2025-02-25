@@ -48,6 +48,11 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.djscruggs.trybern"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5ab78094-cdc6-4004-b56c-ad603729ba6a"
+      }
     }
   }
 }

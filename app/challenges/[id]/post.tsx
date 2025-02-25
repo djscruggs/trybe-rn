@@ -3,9 +3,12 @@ import axios from 'axios';
 import { Link, useLocalSearchParams, router } from 'expo-router';
 import React from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import UserAvatar from 'react-native-user-avatar';
 
+import LinkRenderer from '~/components/link-renderer';
 import { useMemberContext } from '~/contexts/member-context';
 import { API_HOST } from '~/lib/environment';
+import { textToJSX } from '~/lib/helpers';
 
 export default function PostDetail() {
   const { postId } = useLocalSearchParams();
@@ -33,9 +36,18 @@ export default function PostDetail() {
         </View>
       ) : (
         <View className="p-2">
-          <Text className="text-xl font-bold">Post Title: {post.title}</Text>
-          <Text className="text-xl font-bold">Post Content: {post.body}</Text>
-
+          <View className="flex-row items-center justify-start">
+            <View className="h-10 w-10">
+              <UserAvatar
+                size={40}
+                name={post.user.profile.fullName}
+                src={post.user.profile.profileImage ?? undefined}
+              />
+            </View>
+            <Text className="text-md ml-2 font-bold">Post Title: {post.title}</Text>
+          </View>
+          <Text className="text-md my-4">{textToJSX(post.body)}</Text>
+          <LinkRenderer text={post.body} />
           {/* Add more details or components related to the post here */}
           {challenge?.id && (
             <View className="mt-10 flex items-center justify-center">

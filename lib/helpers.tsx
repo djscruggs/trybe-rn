@@ -360,15 +360,6 @@ export function formatDate(dateString: string, locale: string): string {
   }
   return '';
 }
-export function convertYouTubeLinksToImages(body: string, postLink: string = ''): string {
-  const youtubeRegex = /https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/g;
-  return body.replace(youtubeRegex, (match, p1, videoId) => {
-    if (postLink) {
-      return `<br><br ><a href="${postLink}"><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" alt="YouTube Video"></a>`;
-    }
-    return `<br><br><img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="YouTube Video">`;
-  });
-}
 
 export function pathToDotRoute(path: string): string {
   if (!path) return '';

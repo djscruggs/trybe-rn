@@ -211,7 +211,6 @@ const NumberSchedule = ({
           </Text>
         ))}
       </View>
-      <Text>{JSON.stringify(postsByDayNum)}</Text>
     </View>
   );
 };
@@ -263,7 +262,7 @@ const PostsBlock = ({
       {(isPublished() || currentUser?.id === challenge.userId) && (
         <>
           <Link
-            href={`/challenges/${challenge.id}/post?postId=${post.id}`}
+            href={`/challenges/${challenge.id}/post?postId=${post.id}` as any}
             key={post.id}
             style={{ marginBottom: 10 }}>
             <Text
