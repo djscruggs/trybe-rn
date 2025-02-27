@@ -1,40 +1,38 @@
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import axios from 'axios';
 import { Tabs } from 'expo-router';
+import { useEffect, useState } from 'react';
 import Toast from 'react-native-toast-message';
-import { useCurrentUser } from '~/contexts/currentuser-context';
+
 import { TabBarIcon } from '~/components/TabBarIcon';
+import { useCurrentUser, UserProvider } from '~/contexts/currentuser-context';
 import { tokenCache } from '~/lib/cache';
 import { API_HOST, CLERK_PUBLISHABLE_KEY } from '~/lib/environment';
-import { UserProvider } from '~/contexts/currentuser-context';
-import { useEffect, useState } from 'react';
-import axios from 'axios';
 // Create a client
 const queryClient = new QueryClient();
 
 function TabScreens() {
-  const { userId} = useAuth();
+  const { userId } = useAuth();
   const { currentUser, setCurrentUser } = useCurrentUser();
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const result = await axios.get(`${API_HOST}/api/clerk/${userId}`);
         const data = result.data;
-        console.log('data', data);
         setCurrentUser(data);
       } catch (err) {
-        console.log('err', err);
-        setError(err.message);
+        console.error('err', err);
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
         setLoading(false);
       }
     };
-    console.log('userId', userId);
-    fetchUser();
 
+    fetchUser();
   }, [userId]);
   return (
     <Tabs
@@ -139,7 +137,6 @@ export default function TabLayout() {
   if (!publishableKey) {
     throw new Error('Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY to your ~/lib/environment.ts');
   }
-  console.log('publishableKey', publishableKey);
 
   return (
     <QueryClientProvider client={queryClient}>

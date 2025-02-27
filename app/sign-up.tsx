@@ -1,11 +1,12 @@
 import { useSSO } from '@clerk/clerk-expo';
+import { SocialIcon, SocialIconProps } from '@rneui/themed';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect } from 'react';
 import { View, Button } from 'react-native';
-import { useCurrentUser } from '~/contexts/currentuser-context';
 
+import { useCurrentUser } from '~/contexts/currentuser-context';
 export const useWarmUpBrowser = () => {
   useEffect(() => {
     // Preloads the browser for Android devices to reduce authentication load time
@@ -23,7 +24,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function SignUpPage() {
   useWarmUpBrowser();
-  const { currentUser,setCurrentUser } = useCurrentUser();
+  const { currentUser, setCurrentUser } = useCurrentUser();
   if (currentUser) {
     router.push('/');
   }
@@ -31,7 +32,7 @@ export default function SignUpPage() {
   // Use the `useSSO()` hook to access the `startSSOFlow()` method
   const { startSSOFlow } = useSSO();
 
-  const onPress = useCallback(async () => {
+  const googleSignIn = useCallback(async () => {
     try {
       // Start the authentication process by calling `startSSOFlow()`
       const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
@@ -59,7 +60,14 @@ export default function SignUpPage() {
 
   return (
     <View className="flex-1 items-center justify-center bg-white">
-      <Button title="Sign in with Google" onPress={onPress} />
+      <SocialIcon
+        type="google"
+        iconType="font-awesome"
+        style={{ width: 200, height: 60 }}
+        title="Sign in with Google"
+        button
+        onPress={googleSignIn}
+      />
     </View>
   );
 }
