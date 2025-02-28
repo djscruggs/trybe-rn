@@ -1,16 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useLocalSearchParams, Slot, Link, usePathname } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 
-import { MemberContextProvider, useMemberContext } from '~/contexts/member-context';
+import { useCurrentUser } from '~/contexts/currentuser-context';
+import { MemberContextProvider } from '~/contexts/member-context';
 import { API_HOST } from '~/lib/environment';
 import { iconMap } from '~/lib/helpers';
-import { Challenge } from '~/lib/types';
+import { Challenge, MemberChallenge } from '~/lib/types';
 
 export default function ChallengeLayout() {
-  const { membership, setMembership } = useMemberContext();
+  const [membership, setMembership] = useState<MemberChallenge | null>(null);
   const { id } = useLocalSearchParams();
 
   // Fetch challenge data using TanStack Query
@@ -27,7 +28,25 @@ export default function ChallengeLayout() {
     },
     staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
   });
+  const { getToken } = useCurrentUser();
 
+  const loadMembership = async () => {
+    const token = await getToken();
+
+    if (!challenge || !token) {
+      setMembership(null);
+      return;
+    }
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+    const url = `${API_HOST}/api/challenges/v/${id}/membership`;
+    const response = await axios.get(url, { headers });
+    setMembership(response.data.membership);
+  };
+  useEffect(() => {
+    loadMembership();
+  }, [challenge]);
   if (isLoading) return <ActivityIndicator size="small" color="#C4C4C4" />;
   if (error) return <Text className="text-red-500">Error loading challenge details</Text>;
 

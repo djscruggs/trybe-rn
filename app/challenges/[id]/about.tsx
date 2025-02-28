@@ -4,17 +4,10 @@ import axios from 'axios';
 import * as Localization from 'expo-localization';
 import { DateTimeFormatOptions } from 'intl';
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  Modal,
-  Platform,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
 import Share from 'react-native-share';
 
+import ChallengeNotificationModal from '~/components/challenge-notification-modal';
 import ErrorText from '~/components/error-text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { useMemberContext } from '~/contexts/member-context';
@@ -35,10 +28,10 @@ export default function ChallengeAbout() {
   const [isMember, setIsMember] = useState(Boolean(membership));
   const [error, setError] = useState('');
   const [showTimeModal, setShowTimeModal] = useState(false);
-  const [notificationTime, setNotificationTime] = useState(new Date());
-  const [startDate, setStartDate] = useState(new Date());
+  const today = new Date();
+  today.setDate(today.getDate() + 1);
+  const [startDate, setStartDate] = useState(today);
   const [showTimePicker, setShowTimePicker] = useState(Platform.OS === 'ios');
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerMode, setPickerMode] = useState<'time' | 'date'>('time');
 
   const handleJoinOrLeaveChallenge = () => {
@@ -80,10 +73,10 @@ export default function ChallengeAbout() {
       });
   };
 
-  const handleJoinWithNotifications = async () => {
+  const handleNotificationConfirm = async (notificationTime: Date, startDate: Date) => {
     setJoining(true);
     setShowTimeModal(false);
-
+    console.log('subsmitted startDate', startDate.toISOString());
     const token = await getToken();
     const headers = {
       Authorization: `Bearer ${token}`,
@@ -113,8 +106,9 @@ export default function ChallengeAbout() {
     axios
       .post(`${API_HOST}/api/challenges/join-unjoin/${challenge?.id}`, form, { headers })
       .then((result) => {
+        console.log(result.data.data);
         setIsMember(!isMember);
-        setMembership(result.data);
+        setMembership(result.data.data);
         setJoining(false);
         setError('');
       })
@@ -133,7 +127,7 @@ export default function ChallengeAbout() {
 
     if (selectedTime) {
       if (pickerMode === 'time') {
-        setNotificationTime(selectedTime);
+        setStartDate(selectedTime);
       } else {
         setStartDate(selectedTime);
       }
@@ -153,7 +147,6 @@ export default function ChallengeAbout() {
     day: 'numeric',
   };
   const locale = Localization.getLocales()[0]?.languageTag;
-
   return (
     <View className="bg-white p-2">
       {error && <ErrorText>{error}</ErrorText>}
@@ -178,39 +171,42 @@ export default function ChallengeAbout() {
             <Text className="text-base text-black">{calculateDuration(challenge)}</Text>
           </View>
         </View>
-
-        <View className="flex-row justify-between">
-          <View className="flex-1">
-            <Text className="mb-1 text-sm text-gray-500">Started</Text>
-            <View className="flex-row items-center">
-              <Text className="text-base text-black">
-                {challenge?.startAt
-                  ? new Date(challenge.startAt).toLocaleDateString(locale, dateOptions)
-                  : ''}
-              </Text>
+        {membership && (
+          <View className="flex-row justify-between">
+            <View className="flex-1">
+              <Text className="mb-1 text-sm text-gray-500">Starts</Text>
+              <View className="flex-row items-center">
+                <Text className="text-base text-black">
+                  {challenge?.type === 'SELF_LED'
+                    ? new Date(membership.startAt).toLocaleDateString(locale, dateOptions)
+                    : challenge?.startAt
+                      ? new Date(challenge.startAt).toLocaleDateString(locale, dateOptions)
+                      : ''}
+                </Text>
+              </View>
+            </View>
+            <View className="flex-1">
+              <Text className="mb-1 text-sm text-gray-500">Reminder Time</Text>
+              <View className="flex-row items-center">
+                <Text className="text-base text-black">
+                  {new Intl.DateTimeFormat(locale, {
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true,
+                  }).format(
+                    new Date(
+                      0,
+                      0,
+                      0,
+                      membership?.notificationHour ?? 0,
+                      membership?.notificationMinute ?? 0
+                    )
+                  )}
+                </Text>
+              </View>
             </View>
           </View>
-          <View className="flex-1">
-            <Text className="mb-1 text-sm text-gray-500">Reminder Time</Text>
-            <View className="flex-row items-center">
-              <Text className="text-base text-black">
-                {new Intl.DateTimeFormat(locale, {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: true,
-                }).format(
-                  new Date(
-                    0,
-                    0,
-                    0,
-                    membership?.notificationHour ?? 0,
-                    membership?.notificationMinute ?? 0
-                  )
-                )}
-              </Text>
-            </View>
-          </View>
-        </View>
+        )}
         <View className="relative min-h-20  w-full flex-col items-center justify-center">
           <TouchableOpacity
             className="rounded-full bg-red p-2 font-bold"
@@ -236,86 +232,14 @@ export default function ChallengeAbout() {
         </View>
       </View>
 
-      {/* Time Picker Modal */}
-      <Modal
+      {/* Using the reusable notification modal */}
+      <ChallengeNotificationModal
         visible={showTimeModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowTimeModal(false)}>
-        <View className="flex-1 items-center justify-center bg-black/50">
-          <View className="w-4/5 rounded-lg bg-white p-6">
-            <Text className="mb-4 text-center text-lg font-bold">Set Challenge Details</Text>
-
-            {/* Start Date Picker for SELF_LED challenges */}
-            {challenge?.type === 'SELF_LED' && (
-              <View className="mb-6">
-                <Text className="mb-2 text-center text-base">
-                  When would you like to start this challenge?
-                </Text>
-
-                {Platform.OS === 'android' && (
-                  <TouchableOpacity
-                    className="mb-4 rounded bg-gray-200 px-4 py-3"
-                    onPress={() => showTimeDatePicker('date')}>
-                    <Text className="text-center">{startDate.toLocaleDateString()}</Text>
-                  </TouchableOpacity>
-                )}
-
-                {(Platform.OS === 'ios' || (showTimePicker && pickerMode === 'date')) && (
-                  <DateTimePicker
-                    value={startDate}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={handleTimeChange}
-                    minimumDate={new Date()}
-                  />
-                )}
-              </View>
-            )}
-
-            <Text className="mb-2 text-center text-base">
-              Please select a time for your daily challenge notifications
-            </Text>
-
-            {Platform.OS === 'android' && (
-              <TouchableOpacity
-                className="mb-4 rounded bg-gray-200 px-4 py-3"
-                onPress={() => showTimeDatePicker('time')}>
-                <Text className="text-center">
-                  {notificationTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            {(Platform.OS === 'ios' || (showTimePicker && pickerMode === 'time')) && (
-              <DateTimePicker
-                value={notificationTime}
-                mode="time"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleTimeChange}
-              />
-            )}
-
-            <Text className="mb-4 text-center text-base">
-              We'll need to send you notifications for this challenge
-            </Text>
-
-            <View className="mt-4 flex-row justify-around">
-              <TouchableOpacity
-                className="rounded bg-gray-300 px-4 py-2"
-                onPress={() => setShowTimeModal(false)}>
-                <Text>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="rounded bg-red px-4 py-2"
-                onPress={handleJoinWithNotifications}>
-                <Text className="text-white">Confirm</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowTimeModal(false)}
+        onConfirm={handleNotificationConfirm}
+        isSelfLed={challenge?.type === 'SELF_LED'}
+        membership={membership ?? undefined}
+      />
     </View>
   );
 }
