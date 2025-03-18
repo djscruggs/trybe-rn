@@ -51,7 +51,7 @@ export default function Home() {
             {error && <Text>Error loading challenges</Text>}
             {challenges?.map((challenge: any) => (
               <TouchableOpacity
-                key={challenge.id}
+                key={`${challenge.id}-${challenge.name}`}
                 className="mb-4 flex-row items-center gap-4"
                 onPress={() => router.push(`challenges/${challenge.id}/about` as any)}>
                 <Image

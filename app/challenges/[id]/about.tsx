@@ -9,6 +9,7 @@ import Share from 'react-native-share';
 
 import ChallengeNotificationModal from '~/components/challenge-notification-modal';
 import ErrorText from '~/components/error-text';
+import LinkRenderer from '~/components/link-renderer';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { useMemberContext } from '~/contexts/member-context';
 import { API_HOST } from '~/lib/environment';
@@ -147,13 +148,12 @@ export default function ChallengeAbout() {
     day: 'numeric',
   };
   const locale = Localization.getLocales()[0]?.languageTag;
+  const description = textToJSX(challenge?.description ?? '');
   return (
     <View className="bg-white p-2">
       {error && <ErrorText>{error}</ErrorText>}
-      <Text className="mb-6 text-base leading-6 text-gray-700">
-        {textToJSX(challenge?.description ?? '')}
-      </Text>
-
+      {description}
+      <LinkRenderer text={challenge?.description ?? ''} />
       {/* Program Details */}
       <View className="mb-6">
         <View className="mb-4 flex-row justify-between">

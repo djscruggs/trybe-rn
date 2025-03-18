@@ -2,7 +2,7 @@ import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
-import { Tabs } from 'expo-router';
+import { Stack, Tabs } from 'expo-router';
 import { useEffect, useState } from 'react';
 import Toast from 'react-native-toast-message';
 
@@ -144,7 +144,9 @@ export default function TabLayout() {
         <UserProvider>
           <Toast />
           <ClerkLoaded>
-            <TabScreens />
+            <Stack>
+              <TabScreens />
+            </Stack>
           </ClerkLoaded>
         </UserProvider>
       </ClerkProvider>

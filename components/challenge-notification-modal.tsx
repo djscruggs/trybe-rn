@@ -103,7 +103,6 @@ export default function ChallengeNotificationModal({
                 <DateTimePicker
                   value={startDate}
                   mode="date"
-                  format="MM-DD"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={handleDateChange}
                   minimumDate={new Date()}

@@ -61,7 +61,7 @@ export default function ChallengeLayout() {
           {error && <Text className="text-red-500">Error loading challenge details</Text>}
         </View>
       ) : (
-        <View className="mt-20 p-2">
+        <View className="mt-4 p-2">
           <View className="mr-2 flex-row items-center ">
             <Image
               source={iconMap[challenge.icon as keyof typeof iconMap]}
