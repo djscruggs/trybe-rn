@@ -8,6 +8,7 @@ export default function ChallengeProgress() {
   return (
     <View className="flex-1 items-center justify-center bg-white" key={`progress-${challenge?.id}`}>
       <Text className="min-h-100 mb-6 text-base leading-6 text-gray-700">FOOBAR</Text>
+      <CircleExample />
     </View>
   );
 }
