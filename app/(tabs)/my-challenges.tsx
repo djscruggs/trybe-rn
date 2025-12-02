@@ -25,32 +25,30 @@ async function fetchChallenges() {
   return result.data;
 }
 
-export default function Home() {
-  console.log('🏠 Home: Component rendering');
+export default function MyChallenges() {
+  console.log('🏆 MyChallenges: Component rendering');
   
   const { data, error, isLoading } = useQuery({
     queryKey: ['challenges'],
     queryFn: fetchChallenges,
   });
   
-  console.log('📊 Home: Query state:', { isLoading, error: !!error, hasData: !!data });
-  
   const { colors } = useColorScheme();
   const router = useRouter();
 
   // Ensure data is an array before mapping
   const challenges = Array.isArray(data?.challenges) ? data.challenges : [];
-  console.log('🎯 Home: Challenges count:', challenges.length);
+  
   return (
     <SafeAreaView style={ROOT_STYLE}>
-      <Stack.Screen options={{ title: 'TRYBE' }} />
+      <Stack.Screen options={{ title: 'My Challenges' }} />
       <ScrollView className="bg-white">
         <View className="mx-auto w-full flex-1 justify-between px-2 py-4">
           <View className="ios:pt-8 mb-4 pt-12">
             <Text
               variant="largeTitle"
               className="ios:text-left ios:font-black text-center font-bold">
-              Welcome to Trybe
+              My Challenges
             </Text>
           </View>
           <View>

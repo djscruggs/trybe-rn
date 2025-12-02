@@ -119,7 +119,7 @@ export function userLocale(user: CurrentUser | null | undefined): string {
   return user?.locale ?? window.navigator.language ?? 'en-US';
 }
 export function userInitials(user: User | null | undefined): string {
-  if (!user ?? !user?.profile) return '';
+  if (!user || !user?.profile) return '';
   const { firstName, lastName } = user.profile;
   const initials = `${firstName ? firstName[0] : ''}${lastName ? lastName[0] : ''}`;
   return initials.toUpperCase();

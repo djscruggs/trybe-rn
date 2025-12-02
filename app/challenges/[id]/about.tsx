@@ -4,7 +4,7 @@ import axios from 'axios';
 import * as Localization from 'expo-localization';
 import { DateTimeFormatOptions } from 'intl';
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Platform, Alert, Linking } from 'react-native';
 import Share from 'react-native-share';
 
 import ChallengeNotificationModal from '~/components/challenge-notification-modal';
@@ -91,7 +91,10 @@ export default function ChallengeAbout() {
       Alert.alert(
         'Notifications Required',
         'This challenge requires notifications. Please enable them in your device settings.',
-        [{ text: 'OK' }]
+        [
+          { text: 'OK' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+        ]
       );
     }
 
@@ -155,7 +158,7 @@ export default function ChallengeAbout() {
       {description}
       <LinkRenderer text={challenge?.description ?? ''} />
       {/* Program Details */}
-      <View className="mb-6">
+      <View className="mb-6 mt-8">
         <View className="mb-4 flex-row justify-between">
           <View className="flex-1">
             <Text className="mb-1 text-sm text-gray-500">Frequency</Text>
