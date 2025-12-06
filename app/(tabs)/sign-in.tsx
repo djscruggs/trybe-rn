@@ -66,7 +66,7 @@ export default function SignInPage() {
 
   // Handle OAuth Sign In
   const onSocialSignIn = useCallback(
-    async (strategy: 'oauth_google' | 'oauth_linkedin' | 'oauth_slack') => {
+    async (strategy: 'oauth_google' | 'oauth_linkedin_oidc' | 'oauth_slack') => {
       try {
         const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
           strategy,
@@ -168,7 +168,7 @@ export default function SignInPage() {
                   style={{ width: '100%', height: 50, borderRadius: 8 }}
                   title="Continue with LinkedIn"
                   button
-                  onPress={() => onSocialSignIn('oauth_linkedin')}
+                  onPress={() => onSocialSignIn('oauth_linkedin_oidc')}
                 />
                 <SocialIcon
                   type="slack"
