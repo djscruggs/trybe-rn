@@ -3,9 +3,10 @@ import { SocialIcon, SocialIconProps } from '@rneui/themed';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useEffect } from 'react';
-import { View, Button, TextInput } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Button, TextInput, TouchableOpacity } from 'react-native';
 
+import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 export const useWarmUpBrowser = () => {
   useEffect(() => {
@@ -140,6 +141,16 @@ export default function SignUpPage() {
               onPress={() => onSocialSignIn('oauth_slack')}
             />
           </View>
+
+          <TouchableOpacity
+            onPress={() => router.push('/sign-in')}
+            className="mt-6"
+          >
+            <Text className="text-center text-base text-gray-700">
+              Already have an account?{' '}
+              <Text className="font-semibold text-red-600">Sign In</Text>
+            </Text>
+          </TouchableOpacity>
         </>
       ) : (
         <View className="w-full">
