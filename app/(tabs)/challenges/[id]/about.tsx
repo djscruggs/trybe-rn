@@ -2,9 +2,10 @@ import { useAuth } from '@clerk/clerk-expo';
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
 import { DateTimeFormatOptions } from 'intl';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -44,6 +45,16 @@ export default function ChallengeAbout() {
   const [startDate, setStartDate] = useState(today);
   const [showTimePicker, setShowTimePicker] = useState(Platform.OS === 'ios');
   const [pickerMode, setPickerMode] = useState<'time' | 'date'>('time');
+  const [hasPromptedForNotifications, setHasPromptedForNotifications] = useState(false);
+
+  // Check if user has been prompted for notifications before
+  useEffect(() => {
+    const checkNotificationPrompt = async () => {
+      const prompted = await AsyncStorage.getItem('hasPromptedForNotifications');
+      setHasPromptedForNotifications(prompted === 'true');
+    };
+    checkNotificationPrompt();
+  }, []);
 
   const handleJoinOrLeaveChallenge = () => {
     // Check if user is authenticated before allowing join
@@ -121,13 +132,19 @@ export default function ChallengeAbout() {
     const notificationHour = notificationTime.getHours();
     const notificationMinute = notificationTime.getMinutes();
 
-    // Show notification permission message
-    if (Platform.OS !== 'web') {
+    // Show notification permission message only once
+    if (Platform.OS !== 'web' && !hasPromptedForNotifications) {
       Alert.alert(
         'Notifications Required',
         'This challenge requires notifications. Please enable them in your device settings.',
-        [{ text: 'OK' }, { text: 'Open Settings', onPress: () => Linking.openSettings() }]
+        [
+          { text: 'OK' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() }
+        ]
       );
+      // Mark that we've prompted the user
+      await AsyncStorage.setItem('hasPromptedForNotifications', 'true');
+      setHasPromptedForNotifications(true);
     }
 
     const form = new FormData();
@@ -253,6 +270,28 @@ export default function ChallengeAbout() {
             </View>
           </View>
         )}
+
+        {/* Notification Reminder - Show to all users */}
+        {Platform.OS !== 'web' && (
+          <View className="mb-4 rounded-lg bg-blue-50 p-4">
+            <View className="mb-2 flex-row items-center">
+              <Feather name="bell" size={20} color="#3b82f6" />
+              <Text className="ml-2 font-semibold text-blue-900">Enable Notifications</Text>
+            </View>
+            <Text className="mb-3 text-sm text-blue-800">
+              Get daily reminders for this challenge. Enable notifications in your device settings to stay on track.
+            </Text>
+            <TouchableOpacity
+              onPress={() => Linking.openSettings()}
+              className="rounded-md bg-blue-600 px-4 py-2"
+            >
+              <Text className="text-center text-sm font-semibold text-white">
+                Open Settings
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View className="relative min-h-20  w-full flex-col items-center justify-center">
           <TouchableOpacity
             className="rounded-full bg-red p-2 font-bold"
