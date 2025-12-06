@@ -11,6 +11,7 @@ npm-debug.*
 web-build/
 # expo router
 expo-env.d.ts
+.obsidian/
 
 .env
 .env.*
@@ -27,3 +28,4 @@ android
 .claude/settings.local.json
 .claude/hooks/node_modules/
 .claude/tsc-cache/
+.obsidian/workspace.json
