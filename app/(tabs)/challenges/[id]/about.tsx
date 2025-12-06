@@ -135,9 +135,12 @@ export default function ChallengeAbout() {
     form.append('notificationHour', notificationHour.toString());
     form.append('notificationMinute', notificationMinute.toString());
 
-    // Add start date for SELF_LED challenges
+    // Add start date - use user-selected date for SELF_LED, challenge start date for GROUP_LED
     if (challenge?.type === 'SELF_LED') {
       form.append('startAt', startDate.toISOString());
+    } else if (challenge?.startAt) {
+      // For GROUP_LED challenges, use the challenge's start date
+      form.append('startAt', new Date(challenge.startAt).toISOString());
     }
 
     axios
