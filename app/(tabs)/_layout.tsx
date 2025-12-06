@@ -66,6 +66,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="sign-in"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="challenges"
         options={{
           href: null,

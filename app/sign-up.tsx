@@ -136,6 +136,7 @@ export default function SignUpPage() {
             <SocialIcon
               type="slack"
               iconType="font-awesome"
+              style={{ backgroundColor: '#4A154B' }}
               button
               title="Sign up with Slack"
               onPress={() => onSocialSignIn('oauth_slack')}
