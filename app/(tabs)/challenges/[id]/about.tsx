@@ -1,10 +1,19 @@
+import { useAuth } from '@clerk/clerk-expo';
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import * as Localization from 'expo-localization';
 import { DateTimeFormatOptions } from 'intl';
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Platform, Alert, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Platform,
+  Alert,
+  Linking,
+} from 'react-native';
 import Share from 'react-native-share';
 
 import ChallengeNotificationModal from '~/components/challenge-notification-modal';
@@ -18,6 +27,7 @@ import { getShortUrl } from '~/lib/helpers/challenge';
 
 export default function ChallengeAbout() {
   const { getToken } = useCurrentUser();
+  const { userId } = useAuth();
   const { membership, challenge, setMembership } = useMemberContext();
   const handleCopy = () => {
     const url = getShortUrl(challenge, membership);
@@ -26,7 +36,7 @@ export default function ChallengeAbout() {
     });
   };
   const [joining, setJoining] = useState(false);
-  const [isMember, setIsMember] = useState(Boolean(membership));
+  const isMember = Boolean(membership);
   const [error, setError] = useState('');
   const [showTimeModal, setShowTimeModal] = useState(false);
   const today = new Date();
@@ -36,6 +46,22 @@ export default function ChallengeAbout() {
   const [pickerMode, setPickerMode] = useState<'time' | 'date'>('time');
 
   const handleJoinOrLeaveChallenge = () => {
+    // Check if user is authenticated before allowing join
+    if (!userId && !isMember) {
+      Alert.alert('Sign In Required', 'Please sign in to join this challenge', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign In',
+          onPress: () => {
+            // Navigate to sign-up page using expo-router
+            const router = require('expo-router').router;
+            router.push('/(tabs)/sign-up');
+          },
+        },
+      ]);
+      return;
+    }
+
     if (isMember) {
       // Show confirmation dialog for leaving the challenge
       Alert.alert(
@@ -63,7 +89,6 @@ export default function ChallengeAbout() {
     axios
       .post(`${API_HOST}/api/challenges/join-unjoin/${challenge?.id}`, {}, { headers })
       .then((result) => {
-        setIsMember(false);
         setMembership(null);
       })
       .catch((error) => {
@@ -77,7 +102,17 @@ export default function ChallengeAbout() {
   const handleNotificationConfirm = async (notificationTime: Date, startDate: Date) => {
     setJoining(true);
     setShowTimeModal(false);
-    console.log('subsmitted startDate', startDate.toISOString());
+    console.log('DEBUG: handleNotificationConfirm called');
+    console.log('DEBUG: submitted startDate', startDate.toISOString());
+    console.log('DEBUG: notificationTime', notificationTime.toISOString());
+    console.log('DEBUG: userId from Clerk', userId);
+
+    if (!userId) {
+      setError('User not authenticated. Please sign in again.');
+      setJoining(false);
+      return;
+    }
+
     const token = await getToken();
     const headers = {
       Authorization: `Bearer ${token}`,
@@ -91,14 +126,12 @@ export default function ChallengeAbout() {
       Alert.alert(
         'Notifications Required',
         'This challenge requires notifications. Please enable them in your device settings.',
-        [
-          { text: 'OK' },
-          { text: 'Open Settings', onPress: () => Linking.openSettings() },
-        ]
+        [{ text: 'OK' }, { text: 'Open Settings', onPress: () => Linking.openSettings() }]
       );
     }
 
     const form = new FormData();
+    form.append('userId', userId);
     form.append('notificationHour', notificationHour.toString());
     form.append('notificationMinute', notificationMinute.toString());
 
@@ -110,13 +143,20 @@ export default function ChallengeAbout() {
     axios
       .post(`${API_HOST}/api/challenges/join-unjoin/${challenge?.id}`, form, { headers })
       .then((result) => {
-        console.log(result.data.data);
-        setIsMember(!isMember);
-        setMembership(result.data.data);
+        console.log('DEBUG: API Success Response:', JSON.stringify(result.data, null, 2));
+        console.log('DEBUG: Setting membership to:', result.data.membership);
+        Alert.alert('Debug', `Full Response:\n${JSON.stringify(result.data, null, 2)}`);
+        setMembership(result.data.membership);
         setJoining(false);
         setError('');
       })
       .catch((error) => {
+        console.error('DEBUG: API Error:', error);
+        console.error('DEBUG: Error Response:', error.response?.data);
+        Alert.alert(
+          'Debug Error',
+          `Join Failed: ${error.message}\n${JSON.stringify(error.response?.data)}`
+        );
         setError(error.response?.data?.message || 'Failed to join challenge');
       })
       .finally(() => {
@@ -180,7 +220,7 @@ export default function ChallengeAbout() {
               <Text className="mb-1 text-sm text-gray-500">Starts</Text>
               <View className="flex-row items-center">
                 <Text className="text-base text-black">
-                  {challenge?.type === 'SELF_LED'
+                  {challenge?.type === 'SELF_LED' && membership.startAt
                     ? new Date(membership.startAt).toLocaleDateString(locale, dateOptions)
                     : challenge?.startAt
                       ? new Date(challenge.startAt).toLocaleDateString(locale, dateOptions)

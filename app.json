@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "TRYBE",
+    "name": "Trybe",
     "slug": "trybe-rn",
     "version": "1.0.0",
     "scheme": "trybe-rn",
@@ -40,7 +40,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.djscruggs.trybern"
+      "bundleIdentifier": "com.djscruggs.trybern",
+      "infoPlist": {
+        "CFBundleDisplayName": "Trybe"
+      }
     },
     "android": {
       "adaptiveIcon": {

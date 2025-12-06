@@ -96,3 +96,24 @@ bd sync
 ### Key Features
 - **Git-native**: Issues are stored in `.beads/issues.jsonl` and synced with your code.
 - **AI-friendly**: Designed for CLI usage and AI agents.
+
+
+
+**Important**
+When doing web searches for documentation, search for an llms.txt file and add it to blz (see below)
+
+This project uses `blz` - a fast CLI tool for searching llms.txt documentation files. Use it to quickly find documentation for the tech stack and this project.
+
+
+```bash
+
+# Option 1: Local docs if an llms.txt exists
+
+blz add [name of project] ./llms.txt
+
+
+# Option 2: Add from web 
+# JavaScript/TypeScript ecosystem
+blz add bun https://bun.sh/llms.txt
+blz add turborepo https://turborepo.com/llms.txt
+```

@@ -1,10 +1,10 @@
-import { useSSO } from '@clerk/clerk-expo';
+import { useSignUp, useSSO } from '@clerk/clerk-expo';
 import { SocialIcon, SocialIconProps } from '@rneui/themed';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect } from 'react';
-import { View, Button } from 'react-native';
+import { View, Button, TextInput } from 'react-native';
 
 import { useCurrentUser } from '~/contexts/currentuser-context';
 export const useWarmUpBrowser = () => {
@@ -24,50 +24,134 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function SignUpPage() {
   useWarmUpBrowser();
-  const { currentUser, setCurrentUser } = useCurrentUser();
+  const { currentUser } = useCurrentUser();
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const { startSSOFlow } = useSSO();
+  const [emailAddress, setEmailAddress] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [pendingVerification, setPendingVerification] = React.useState(false);
+  const [code, setCode] = React.useState('');
+
   if (currentUser) {
     router.push('/');
   }
 
-  // Use the `useSSO()` hook to access the `startSSOFlow()` method
-  const { startSSOFlow } = useSSO();
+  // Handle Email/Password Sign Up
+  const onSignUpPress = async () => {
+    if (!isLoaded) return;
 
-  const googleSignIn = useCallback(async () => {
     try {
-      // Start the authentication process by calling `startSSOFlow()`
-      const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
-        strategy: 'oauth_google',
-        // Defaults to current path
-        redirectUrl: AuthSession.makeRedirectUri(),
+      await signUp.create({
+        emailAddress,
+        password,
       });
 
-      // If sign in was successful, set the active session
-      if (createdSessionId) {
-        setActive!({ session: createdSessionId });
-        router.push('/');
-      } else {
-        // If there is no `createdSessionId`,
-        // there are missing requirements, such as MFA
-        // Use the `signIn` or `signUp` returned from `startSSOFlow`
-        // to handle next steps
-      }
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+
+      setPendingVerification(true);
+    } catch (err: any) {
       console.error(JSON.stringify(err, null, 2));
     }
-  }, []);
+  };
+
+  // Handle Email Verification
+  const onPressVerify = async () => {
+    if (!isLoaded) return;
+
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code,
+      });
+
+      if (completeSignUp.status === 'complete') {
+        await setActive({ session: completeSignUp.createdSessionId });
+        router.push('/');
+      } else {
+        console.error(JSON.stringify(completeSignUp, null, 2));
+      }
+    } catch (err: any) {
+      console.error(JSON.stringify(err, null, 2));
+    }
+  };
+
+  // Handle OAuth Sign Up
+  const onSocialSignIn = useCallback(
+    async (strategy: 'oauth_google' | 'oauth_linkedin' | 'oauth_slack') => {
+      try {
+        const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
+          strategy,
+          redirectUrl: AuthSession.makeRedirectUri(),
+        });
+
+        if (createdSessionId) {
+          setSSOActive!({ session: createdSessionId });
+          router.push('/');
+        }
+      } catch (err) {
+        console.error(JSON.stringify(err, null, 2));
+      }
+    },
+    [startSSOFlow]
+  );
 
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <SocialIcon
-        type="google"
-        iconType="font-awesome"
-        style={{ width: 200, height: 60 }}
-        title="Sign in with Google"
-        button
-        onPress={googleSignIn}
-      />
+    <View className="flex-1 items-center justify-center bg-white px-5">
+      {!pendingVerification ? (
+        <>
+          <View className="mb-8 w-full">
+             <TextInput
+              autoCapitalize="none"
+              value={emailAddress}
+              placeholder="Email..."
+              onChangeText={(email) => setEmailAddress(email)}
+              className="mb-4 h-12 rounded-lg border border-gray-300 px-4"
+            />
+            <TextInput
+              value={password}
+              placeholder="Password..."
+              placeholderTextColor="#000"
+              secureTextEntry={true}
+              onChangeText={(password) => setPassword(password)}
+              className="mb-4 h-12 rounded-lg border border-gray-300 px-4"
+            />
+            <Button title="Sign Up" onPress={onSignUpPress} />
+          </View>
+
+          <View className="w-full gap-4">
+            <SocialIcon
+              type="google"
+              iconType="font-awesome"
+              button
+              title="Sign up with Google"
+              onPress={() => onSocialSignIn('oauth_google')}
+            />
+            <SocialIcon
+              type="linkedin"
+              iconType="font-awesome"
+              button
+              title="Sign up with LinkedIn"
+              onPress={() => onSocialSignIn('oauth_linkedin')}
+            />
+            <SocialIcon
+              type="slack"
+              iconType="font-awesome"
+              button
+              title="Sign up with Slack"
+              onPress={() => onSocialSignIn('oauth_slack')}
+            />
+          </View>
+        </>
+      ) : (
+        <View className="w-full">
+          <TextInput
+            value={code}
+            placeholder="Verification Code..."
+            onChangeText={(code) => setCode(code)}
+            className="mb-4 h-12 rounded-lg border border-gray-300 px-4"
+          />
+          <Button title="Verify Email" onPress={onPressVerify} />
+        </View>
+      )}
     </View>
   );
 }

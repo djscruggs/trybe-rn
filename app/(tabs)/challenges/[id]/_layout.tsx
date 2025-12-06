@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Text, View, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 
 import { useCurrentUser } from '~/contexts/currentuser-context';
-import { MemberContextProvider } from '~/contexts/member-context';
+import { MemberContextProvider, useMemberContext } from '~/contexts/member-context';
 import { API_HOST } from '~/lib/environment';
 import { iconMap } from '~/lib/helpers';
 import { Challenge, MemberChallenge } from '~/lib/types';
@@ -106,9 +106,17 @@ const ChallengeDetailNavigation = ({ challenge }: { challenge: Challenge }) => {
         className={`${isCurrentRoute(`/chat`) ? 'font-bold text-red' : 'text-gray-500'}`}>
         Chat
       </Link>
-      <TouchableOpacity className="rounded-full bg-red p-1">
-        <Text className="text-xs text-white">Check In</Text>
-      </TouchableOpacity>
+      <CheckInButton />
     </View>
+  );
+};
+
+const CheckInButton = () => {
+  const { membership } = useMemberContext();
+  if (!membership) return null;
+  return (
+    <TouchableOpacity className="rounded-full bg-red p-1">
+      <Text className="text-xs text-white">Check In</Text>
+    </TouchableOpacity>
   );
 };

@@ -30,34 +30,33 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="list" color={color} />,
         }}
       />
-      {currentUser && (
-        <Tabs.Screen
-          name="new"
-          options={{
-            href: null,
-          }}
-        />
-      )}
-      {!currentUser && (
-        <Tabs.Screen
-          name="new"
-          options={{
-            href: null,
-          }}
-        />
-      )}
       <Tabs.Screen
-        name="about"
+        name="community"
         options={{
-          href: null,
+          title: 'Community',
+          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="users" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="new"
+        options={{
+          title: 'Create',
+          tabBarIcon: ({ color }: { color: string }) => (
+            <TabBarIcon name="pluscircle" type="antdesign" color={color} size={36} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          href: currentUser ? '/profile' : null,
           tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="user" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="about"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen
@@ -67,9 +66,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="challenges/[id]"
+        name="challenges"
         options={{
           href: null,
+          tabBarStyle: { display: 'flex' },
         }}
       />
     </Tabs>
