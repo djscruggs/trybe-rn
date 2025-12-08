@@ -17,7 +17,7 @@ export default function Profile() {
   useEffect(() => {
     // Redirect to sign-up if user is not authenticated
     if (isLoaded && !isSignedIn) {
-      router.replace('/(tabs)/sign-up');
+      router.push('/(tabs)/sign-up');
     }
   }, [isLoaded, isSignedIn]);
 
@@ -38,15 +38,9 @@ export default function Profile() {
     );
   }
 
-  // Show loading while current user data is being fetched
-  if (!currentUser) {
-    return (
-      <SafeAreaView style={ROOT_STYLE}>
-        <View className="flex-1 items-center justify-center bg-white">
-          <ActivityIndicator size="large" color="red" />
-        </View>
-      </SafeAreaView>
-    );
+  // If not signed in, don't show spinner (redirect will handle it)
+  if (!isSignedIn || !currentUser) {
+    return null;
   }
 
   return (

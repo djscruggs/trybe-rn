@@ -1,10 +1,10 @@
-import { useAuth, useSSO } from '@clerk/clerk-expo';
+import { useAuth, useSignUp, useSSO } from '@clerk/clerk-expo';
 import { SocialIcon } from '@rneui/themed';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useEffect } from 'react';
-import { View, SafeAreaView, ViewStyle, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, SafeAreaView, ViewStyle, ActivityIndicator, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
@@ -30,6 +30,13 @@ export default function SignUpPage() {
   useWarmUpBrowser();
   const { currentUser } = useCurrentUser();
   const { isSignedIn, isLoaded } = useAuth();
+  const { signUp, setActive } = useSignUp();
+  const { startSSOFlow } = useSSO();
+
+  const [emailAddress, setEmailAddress] = useState('');
+  const [password, setPassword] = useState('');
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [code, setCode] = useState('');
 
   // Redirect to home if already signed in
   useEffect(() => {
@@ -38,33 +45,65 @@ export default function SignUpPage() {
     }
   }, [isLoaded, isSignedIn, currentUser]);
 
-  // Use the `useSSO()` hook to access the `startSSOFlow()` method
-  const { startSSOFlow } = useSSO();
+  // Handle Email/Password Sign Up
+  const onSignUpPress = async () => {
+    if (!isLoaded) return;
 
-  const googleSignIn = useCallback(async () => {
     try {
-      // Start the authentication process by calling `startSSOFlow()`
-      const { createdSessionId, setActive } = await startSSOFlow({
-        strategy: 'oauth_google',
-        // Defaults to current path
-        redirectUrl: AuthSession.makeRedirectUri(),
+      await signUp!.create({
+        emailAddress,
+        password,
       });
 
-      // If sign in was successful, set the active session
-      if (createdSessionId) {
-        setActive!({ session: createdSessionId });
+      await signUp!.prepareEmailAddressVerification({ strategy: 'email_code' });
+
+      setPendingVerification(true);
+    } catch (err: any) {
+      console.error('Sign up error:', JSON.stringify(err, null, 2));
+    }
+  };
+
+  // Handle Email Verification
+  const onPressVerify = async () => {
+    if (!isLoaded) return;
+
+    try {
+      const completeSignUp = await signUp!.attemptEmailAddressVerification({
+        code,
+      });
+
+      if (completeSignUp.status === 'complete') {
+        await setActive!({ session: completeSignUp.createdSessionId });
         router.replace('/');
       } else {
-        // If there is no `createdSessionId`,
-        // there are missing requirements, such as MFA
-        console.log('Additional steps required for authentication');
+        console.error('Verification incomplete:', JSON.stringify(completeSignUp, null, 2));
       }
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error('Sign in error:', JSON.stringify(err, null, 2));
+    } catch (err: any) {
+      console.error('Verification error:', JSON.stringify(err, null, 2));
     }
-  }, [startSSOFlow]);
+  };
+
+  // Handle OAuth Sign Up
+  const onSocialSignIn = useCallback(
+    async (strategy: 'oauth_google' | 'oauth_linkedin_oidc' | 'oauth_slack') => {
+      try {
+        const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
+          strategy,
+          redirectUrl: AuthSession.makeRedirectUri(),
+        });
+
+        if (createdSessionId) {
+          setSSOActive!({ session: createdSessionId });
+          router.replace('/');
+        } else {
+          console.log('Additional steps required for authentication');
+        }
+      } catch (err) {
+        console.error('OAuth error:', JSON.stringify(err, null, 2));
+      }
+    },
+    [startSSOFlow]
+  );
 
   // Show loading while checking auth state
   if (!isLoaded) {
@@ -79,31 +118,130 @@ export default function SignUpPage() {
 
   return (
     <SafeAreaView style={ROOT_STYLE}>
-      <View className="flex-1 items-center justify-center bg-white px-6">
-        <View className="mb-8 items-center">
-          <Text className="mb-4 text-3xl font-bold text-gray-900">Welcome to Trybe</Text>
-          <Text className="text-center text-base text-gray-600">
-            Sign in to join challenges, track your progress, and connect with the community
-          </Text>
-        </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="flex-1 items-center justify-center bg-white px-6 py-8">
+            <View className="mb-8 items-center">
+              <Text className="mb-4 text-3xl font-bold text-gray-900">
+                {pendingVerification ? 'Verify Your Email' : 'Welcome to Trybe'}
+              </Text>
+              <Text className="text-center text-base text-gray-600">
+                {pendingVerification
+                  ? 'Enter the verification code sent to your email'
+                  : 'Sign up to join challenges, track your progress, and connect with the community'}
+              </Text>
+            </View>
 
-        <View className="w-full max-w-sm">
-          <SocialIcon
-            type="google"
-            iconType="font-awesome"
-            style={{ width: '100%', height: 60, borderRadius: 8 }}
-            title="Continue with Google"
-            button
-            onPress={googleSignIn}
-          />
-        </View>
+            <View className="w-full max-w-sm">
+              {!pendingVerification ? (
+                <>
+                  {/* Email/Password Form */}
+                  <View className="mb-6">
+                    <TextInput
+                      autoCapitalize="none"
+                      value={emailAddress}
+                      placeholder="Email"
+                      onChangeText={setEmailAddress}
+                      className="mb-3 h-12 rounded-lg border border-gray-300 px-4"
+                      keyboardType="email-address"
+                      autoComplete="email"
+                    />
+                    <TextInput
+                      value={password}
+                      placeholder="Password"
+                      secureTextEntry
+                      onChangeText={setPassword}
+                      className="mb-4 h-12 rounded-lg border border-gray-300 px-4"
+                      autoComplete="password-new"
+                    />
+                    <TouchableOpacity
+                      onPress={onSignUpPress}
+                      className="mb-6 h-12 items-center justify-center rounded-lg bg-red-600"
+                    >
+                      <Text className="font-semibold text-white">Sign Up with Email</Text>
+                    </TouchableOpacity>
+                  </View>
 
-        <View className="mt-8">
-          <Text className="text-center text-sm text-gray-500">
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </Text>
-        </View>
-      </View>
+                  {/* Divider */}
+                  <View className="mb-6 flex-row items-center">
+                    <View className="flex-1 border-b border-gray-300" />
+                    <Text className="mx-4 text-gray-500">or continue with</Text>
+                    <View className="flex-1 border-b border-gray-300" />
+                  </View>
+
+                  {/* Social Sign-In Buttons */}
+                  <View className="mb-6 gap-3">
+                    <SocialIcon
+                      type="google"
+                      iconType="font-awesome"
+                      style={{ width: '100%', height: 50, borderRadius: 8 }}
+                      title="Continue with Google"
+                      button
+                      onPress={() => onSocialSignIn('oauth_google')}
+                    />
+                    <SocialIcon
+                      type="linkedin"
+                      iconType="font-awesome"
+                      style={{ width: '100%', height: 50, borderRadius: 8 }}
+                      title="Continue with LinkedIn"
+                      button
+                      onPress={() => onSocialSignIn('oauth_linkedin_oidc')}
+                    />
+                    <SocialIcon
+                      type="slack"
+                      iconType="font-awesome"
+                      style={{ width: '100%', height: 50, borderRadius: 8, backgroundColor: '#4A154B' }}
+                      title="Continue with Slack"
+                      button
+                      onPress={() => onSocialSignIn('oauth_slack')}
+                    />
+                  </View>
+
+                  {/* Sign-In Link */}
+                  <TouchableOpacity
+                    onPress={() => router.push('/sign-in')}
+                    className="mb-4"
+                  >
+                    <Text className="text-center text-base text-gray-700">
+                      Already have an account?{' '}
+                      <Text className="font-semibold text-red-600">Sign In</Text>
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                // Verification Code Form
+                <View>
+                  <TextInput
+                    value={code}
+                    placeholder="Verification Code"
+                    onChangeText={setCode}
+                    className="mb-4 h-12 rounded-lg border border-gray-300 px-4"
+                    keyboardType="number-pad"
+                  />
+                  <TouchableOpacity
+                    onPress={onPressVerify}
+                    className="h-12 items-center justify-center rounded-lg bg-red-600"
+                  >
+                    <Text className="font-semibold text-white">Verify Email</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            <View className="mt-8">
+              <Text className="text-center text-sm text-gray-500">
+                By continuing, you agree to our Terms of Service and Privacy Policy
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

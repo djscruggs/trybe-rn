@@ -26,3 +26,7 @@ android
 # Claude Code
 .claude/settings.local.json
 .claude/hooks/node_modules/
+.claude/tsc-cache/
+
+# Obsidian
+.obsidian/

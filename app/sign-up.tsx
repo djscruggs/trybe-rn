@@ -3,9 +3,10 @@ import { SocialIcon, SocialIconProps } from '@rneui/themed';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useEffect } from 'react';
-import { View, Button, TextInput } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Button, TextInput, TouchableOpacity } from 'react-native';
 
+import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 export const useWarmUpBrowser = () => {
   useEffect(() => {
@@ -76,7 +77,7 @@ export default function SignUpPage() {
 
   // Handle OAuth Sign Up
   const onSocialSignIn = useCallback(
-    async (strategy: 'oauth_google' | 'oauth_linkedin' | 'oauth_slack') => {
+    async (strategy: 'oauth_google' | 'oauth_linkedin_oidc' | 'oauth_slack') => {
       try {
         const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
           strategy,
@@ -130,16 +131,27 @@ export default function SignUpPage() {
               iconType="font-awesome"
               button
               title="Sign up with LinkedIn"
-              onPress={() => onSocialSignIn('oauth_linkedin')}
+              onPress={() => onSocialSignIn('oauth_linkedin_oidc')}
             />
             <SocialIcon
               type="slack"
               iconType="font-awesome"
+              style={{ backgroundColor: '#4A154B' }}
               button
               title="Sign up with Slack"
               onPress={() => onSocialSignIn('oauth_slack')}
             />
           </View>
+
+          <TouchableOpacity
+            onPress={() => router.push('/sign-in')}
+            className="mt-6"
+          >
+            <Text className="text-center text-base text-gray-700">
+              Already have an account?{' '}
+              <Text className="font-semibold text-red-600">Sign In</Text>
+            </Text>
+          </TouchableOpacity>
         </>
       ) : (
         <View className="w-full">
