@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -13,7 +14,6 @@ import {
   Alert,
 } from 'react-native';
 import UserAvatar from 'react-native-user-avatar';
-import { Ionicons } from '@expo/vector-icons';
 
 import { SignOutButton } from '~/components/SignOutButton';
 import { Text } from '~/components/nativewindui/Text';
@@ -81,27 +81,29 @@ export default function Profile() {
         return;
       }
 
-      // Launch image picker
+      // Launch image picker with base64 encoding
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 1,
+        quality: 0.8, // Optimize quality for faster upload
+        base64: true, // Get base64 representation
       });
 
-      if (!result.canceled) {
-        const imageUri = result.assets[0].uri;
-        const response = await fetch(imageUri);
-        const blob = await response.blob();
+      if (!result.canceled && result.assets[0].base64 && user) {
+        const base64 = result.assets[0].base64;
+        const mimeType = result.assets[0].mimeType || 'image/jpeg';
 
-        if (user) {
-          await user.setProfileImage({ file: blob });
-          Alert.alert('Success', 'Profile image updated successfully');
-        }
+        // Format for Clerk: data:mimeType;base64,base64String
+        const image = `data:${mimeType};base64,${base64}`;
+
+        await user.setProfileImage({ file: image });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      Alert.alert('Error', 'Failed to upload profile image');
+      const errorMessage =
+        error?.errors?.[0]?.message || error?.message || 'Failed to upload profile image';
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -139,7 +141,9 @@ export default function Profile() {
     );
   }
 
-  const primaryEmail = user?.emailAddresses.find((email) => email.id === user.primaryEmailAddressId);
+  const primaryEmail = user?.emailAddresses.find(
+    (email) => email.id === user.primaryEmailAddressId
+  );
   const externalAccounts = user?.externalAccounts || [];
 
   return (
@@ -161,9 +165,8 @@ export default function Profile() {
                     <Text className="text-lg font-semibold text-gray-900">Profile</Text>
                     <TouchableOpacity
                       onPress={() => setIsEditingProfile(true)}
-                      className="rounded px-3 py-1.5"
-                    >
-                      <Text className="text-sm font-medium text-red-600">Edit</Text>
+                      className="rounded px-3 py-1.5">
+                      <Text className="text-red-600 text-sm font-medium">Edit</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -187,15 +190,13 @@ export default function Profile() {
                     <View className="flex-row gap-2">
                       <TouchableOpacity
                         onPress={handleAvatarUpload}
-                        className="rounded border border-red-500 px-3 py-1.5"
-                      >
-                        <Text className="text-sm font-medium text-red-600">Upload</Text>
+                        className="border-red-500 rounded border px-3 py-1.5">
+                        <Text className="text-red-600 text-sm font-medium">Upload</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={handleAvatarRemove}
-                        className="rounded px-3 py-1.5"
-                      >
-                        <Text className="text-sm font-medium text-red-600">Remove</Text>
+                        className="rounded px-3 py-1.5">
+                        <Text className="text-red-600 text-sm font-medium">Remove</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -228,12 +229,11 @@ export default function Profile() {
                   {/* Action Buttons */}
                   <View className="flex-row justify-end gap-2">
                     <TouchableOpacity onPress={handleCancelEdit} className="rounded px-4 py-2">
-                      <Text className="text-sm font-medium text-red-600">Cancel</Text>
+                      <Text className="text-red-600 text-sm font-medium">Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={handleSaveProfile}
-                      className="rounded bg-red-500 px-4 py-2"
-                    >
+                      className="bg-red-500 rounded px-4 py-2">
                       <Text className="text-sm font-medium text-white">Save</Text>
                     </TouchableOpacity>
                   </View>
@@ -250,11 +250,9 @@ export default function Profile() {
               <View className="mb-3 flex-row items-center justify-between">
                 <View className="flex-1">
                   <View className="flex-row items-center gap-2">
-                    <Text className="text-base text-gray-900">
-                      {primaryEmail?.emailAddress}
-                    </Text>
-                    <View className="rounded bg-blue-100 px-2 py-0.5">
-                      <Text className="text-xs font-medium text-blue-700">Primary</Text>
+                    <Text className="text-base text-gray-900">{primaryEmail?.emailAddress}</Text>
+                    <View className="bg-blue-100 rounded px-2 py-0.5">
+                      <Text className="text-blue-700 text-xs font-medium">Primary</Text>
                     </View>
                   </View>
                 </View>
@@ -265,10 +263,9 @@ export default function Profile() {
 
               <TouchableOpacity
                 onPress={() => Alert.alert('Info', 'Add email feature coming soon')}
-                className="mt-2 flex-row items-center gap-2"
-              >
+                className="mt-2 flex-row items-center gap-2">
                 <Ionicons name="add-circle-outline" size={18} color="#DC2626" />
-                <Text className="text-sm font-medium text-red-600">Add email address</Text>
+                <Text className="text-red-600 text-sm font-medium">Add email address</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -289,8 +286,7 @@ export default function Profile() {
                     key={account.id}
                     className={`flex-row items-center justify-between p-4 ${
                       index < externalAccounts.length - 1 ? 'border-b border-gray-200' : ''
-                    }`}
-                  >
+                    }`}>
                     <View className="flex-row items-center gap-3">
                       <View className="h-5 w-5 items-center justify-center">
                         {isGoogle && <Ionicons name="logo-google" size={20} color="#DB4437" />}
