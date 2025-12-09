@@ -47,7 +47,6 @@ export default function ChallengeLayout() {
   useEffect(() => {
     loadMembership();
   }, [challenge]);
-  if (isLoading) return <ActivityIndicator size="small" color="#C4C4C4" />;
   if (error) return <Text className="text-red-500">Error loading challenge details</Text>;
 
   return (
@@ -57,7 +56,7 @@ export default function ChallengeLayout() {
       challenge={challenge}>
       {isLoading || error ? (
         <View className="flex-1 items-center justify-center">
-          {isLoading && <ActivityIndicator size="small" color="#C4C4C4" />}
+          {isLoading && <ActivityIndicator size="large" color="black" />}
           {error && <Text className="text-red-500">Error loading challenge details</Text>}
         </View>
       ) : (
@@ -85,7 +84,7 @@ const ChallengeDetailNavigation = ({ challenge }: { challenge: Challenge }) => {
   const path = usePathname();
   const isCurrentRoute = (part: string) => path.includes(part);
   return (
-    <View className="mb-4 flex-row items-center justify-between">
+    <View className="mb-4 flex-row items-center justify-between px-2">
       <Link
         href={`/challenges/${challenge.id}/about`}
         className={`${isCurrentRoute(`/about`) ? 'font-bold text-red' : 'text-gray-500'}`}>
@@ -115,8 +114,8 @@ const CheckInButton = () => {
   const { membership } = useMemberContext();
   if (!membership) return null;
   return (
-    <TouchableOpacity className="rounded-full bg-red p-1">
-      <Text className="text-xs text-white">Check In</Text>
+    <TouchableOpacity className="rounded-full bg-red p-1 px-2">
+      <Text className="text-xs font-bold text-white">Check In</Text>
     </TouchableOpacity>
   );
 };

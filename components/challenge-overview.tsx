@@ -4,6 +4,7 @@ import { type DateTimeFormatOptions } from 'intl';
 import { useState, useEffect, useContext } from 'react';
 import { HiOutlineClipboardCopy } from 'react-icons/hi';
 import { LiaUserFriendsSolid } from 'react-icons/lia';
+import { ActivityIndicator } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import toast from 'react-native-toast-message';
 
@@ -114,7 +115,7 @@ export default function ChallengeOverview(props: ChallengeOverviewProps): JSX.El
                         onClick={() => {
                           setEditingStartAt(true);
                         }}
-                        className="text-red ml-2 text-xs underline">
+                        className="ml-2 text-xs text-red underline">
                         edit
                       </button>
                     )}
@@ -148,7 +149,7 @@ export default function ChallengeOverview(props: ChallengeOverviewProps): JSX.El
                         onClick={() => {
                           setEditingNotificationTime(true);
                         }}
-                        className="text-red ml-2 text-xs underline">
+                        className="ml-2 text-xs text-red underline">
                         edit
                       </button>
                     )}
@@ -161,7 +162,7 @@ export default function ChallengeOverview(props: ChallengeOverviewProps): JSX.El
       )}
       {challenge.type === 'SCHEDULED' && (
         <>
-          {expired && <div className="text-red text-center">This challenge has ended</div>}
+          {expired && <div className="text-center text-red">This challenge has ended</div>}
           <div className="flex-cols mb-2 flex">
             <div className="w-1/3">
               <div className="font-bold">{expired || started ? 'Started' : 'Starts'}</div>
@@ -182,7 +183,7 @@ export default function ChallengeOverview(props: ChallengeOverviewProps): JSX.El
           </div>
           {challenge?._count?.members > 0 && (
             <div className="w-full">
-              <LiaUserFriendsSolid className="text-grey mr-1 inline h-5 w-5" />
+              <LiaUserFriendsSolid className="mr-1 inline h-5 w-5 text-grey" />
               {challenge?._count.members} {pluralize(challenge?._count.members, 'member')}
             </div>
           )}
@@ -191,13 +192,13 @@ export default function ChallengeOverview(props: ChallengeOverviewProps): JSX.El
       {membership && (
         <div className="mt-4 flex w-full items-center justify-center">
           <div className="text-xs">Copy link to invite friends</div>
-          <div className="text-lessblack md:text-md ml-1 max-w-[250px]  rounded-md border p-2 text-left text-sm">
+          <div className="md:text-md ml-1 max-w-[250px] rounded-md  border p-2 text-left text-sm text-lessblack">
             {getShortUrl(challenge, membership, cohortId)}
           </div>
           <HiOutlineClipboardCopy onClick={copyLink} className="ml-1 h-6 w-6 cursor-pointer" />
           <div
             onClick={copyLink}
-            className="text-blue ml-1 cursor-pointer text-xs underline md:text-sm">
+            className="ml-1 cursor-pointer text-xs text-blue underline md:text-sm">
             copy
           </div>
         </div>
@@ -227,9 +228,6 @@ export function EditMembership(props: EditMembershipProps): JSX.Element {
   } else {
     initialNotificationTime = null;
   }
-  const { currentUser } = useContext(CurrentUserContext);
-  const localTimeFormat = currentUser?.locale === 'en-US' ? 'h:mm a' : 'h:mm';
-  const localDateFormat = currentUser?.locale === 'en-US' ? 'M-dd-YYYY' : 'dd-M-YYYY';
   const [formData, setFormData] = useState({
     notificationTime: which === 'notificationTime' ? initialNotificationTime : null,
     startAt:
@@ -241,34 +239,15 @@ export function EditMembership(props: EditMembershipProps): JSX.Element {
   const selectNotificationTime = (time: Date | null): void => {
     setFormData({ ...formData, notificationTime: time });
   };
-  const [errors, setErrors] = useState<{
-    notificationTime: string | null;
-    startAt: string | null;
-  }>({
-    notificationTime: null,
-    startAt: null,
-  });
   const [loading, setLoading] = useState(false);
   const validate = (): boolean => {
-    let valid = true;
-    const errors = {
-      notificationTime: null as string | null,
-      startAt: null as string | null,
-    };
-    if (which === 'notificationTime') {
-      if (!formData.notificationTime) {
-        errors.notificationTime = 'Notification time is required';
-        valid = false;
-      }
+    if (which === 'notificationTime' && !formData.notificationTime) {
+      return false;
     }
-    if (which === 'startAt') {
-      if (!formData.startAt) {
-        errors.startAt = 'Start date is required';
-        valid = false;
-      }
+    if (which === 'startAt' && !formData.startAt) {
+      return false;
     }
-    setErrors(errors);
-    return valid;
+    return true;
   };
   const save = async (): Promise<void> => {
     if (!membership?.id) {
@@ -304,38 +283,37 @@ export function EditMembership(props: EditMembershipProps): JSX.Element {
     <div>
       {which === 'notificationTime' && (
         <DatePicker
-          selected={formData.notificationTime}
-          dateFormat={localTimeFormat}
-          showTimeSelect
-          showTimeSelectOnly
-          timeIntervals={15}
-          onChange={(date) => {
+          modal
+          open
+          date={formData.notificationTime || new Date()}
+          mode="time"
+          onConfirm={(date) => {
             selectNotificationTime(date);
           }}
-          className={`rounded-md border p-1 pl-2 ${errors.notificationTime ? 'border-red' : ''}`}
+          onCancel={onCancel}
         />
       )}
       {which === 'startAt' && (
         <DatePicker
-          name="startAt"
-          required
-          minDate={new Date()}
-          dateFormat={localDateFormat}
-          selected={formData.startAt ? new Date(formData.startAt) : null}
-          onChange={(date: Date) => {
+          modal
+          open
+          date={formData.startAt || new Date()}
+          mode="date"
+          minimumDate={new Date()}
+          onConfirm={(date: Date) => {
             selectDate(date);
           }}
-          className={`rounded-md border p-1 pl-2 ${errors.startAt ? 'border-red' : ''}`}
+          onCancel={onCancel}
         />
       )}
       <div className="inline">
-        <span onClick={save} className="text-red mx-2 cursor-pointer text-xs underline">
+        <span onClick={save} className="mx-2 cursor-pointer text-xs  text-red underline">
           Save
         </span>
         <span onClick={onCancel} className="cursor-pointer text-xs">
           Cancel
         </span>
-        {loading && <Spinner className="ml-2 inline h-4 w-4" />}
+        {loading && <ActivityIndicator size="small" className="mt-10" />}
       </div>
     </div>
   );
