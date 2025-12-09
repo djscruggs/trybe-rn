@@ -1,10 +1,10 @@
-import { useSignIn, useSSO } from '@clerk/clerk-expo';
+import { useAuth, useSignIn, useSSO } from '@clerk/clerk-expo';
 import { SocialIcon } from '@rneui/themed';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Button, TextInput, TouchableOpacity } from 'react-native';
+import { View, Button, TextInput, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
 
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
@@ -27,14 +27,18 @@ WebBrowser.maybeCompleteAuthSession();
 export default function SignInPage() {
   useWarmUpBrowser();
   const { currentUser } = useCurrentUser();
+  const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const { isLoaded, signIn, setActive } = useSignIn();
   const { startSSOFlow } = useSSO();
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
 
-  if (currentUser) {
-    router.push('/');
-  }
+  // Redirect if already signed in
+  useEffect(() => {
+    if (authLoaded && isSignedIn && currentUser) {
+      router.replace('/');
+    }
+  }, [authLoaded, isSignedIn, currentUser]);
 
   // Handle Email/Password Sign In
   const onSignInPress = async () => {
@@ -68,14 +72,31 @@ export default function SignInPage() {
 
         if (createdSessionId) {
           setSSOActive!({ session: createdSessionId });
-          router.push('/');
+          router.replace('/');
         }
-      } catch (err) {
-        console.error(JSON.stringify(err, null, 2));
+      } catch (err: any) {
+        // Handle session already exists error
+        if (err?.errors?.[0]?.code === 'session_exists') {
+          console.log('Session already exists, redirecting to home');
+          router.replace('/');
+          return;
+        }
+        console.error('OAuth error:', JSON.stringify(err, null, 2));
       }
     },
     [startSSOFlow]
   );
+
+  // Show loading while checking auth state or if already signed in
+  if (!authLoaded || isSignedIn) {
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <View className="flex-1 items-center justify-center bg-white">
+          <ActivityIndicator size="large" color="red" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <View className="flex-1 items-center justify-center bg-white px-5">

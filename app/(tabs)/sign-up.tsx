@@ -98,15 +98,21 @@ export default function SignUpPage() {
         } else {
           console.log('Additional steps required for authentication');
         }
-      } catch (err) {
+      } catch (err: any) {
+        // Handle session already exists error
+        if (err?.errors?.[0]?.code === 'session_exists') {
+          console.log('Session already exists, redirecting to home');
+          router.replace('/');
+          return;
+        }
         console.error('OAuth error:', JSON.stringify(err, null, 2));
       }
     },
     [startSSOFlow]
   );
 
-  // Show loading while checking auth state
-  if (!isLoaded) {
+  // Show loading while checking auth state or if already signed in
+  if (!isLoaded || isSignedIn) {
     return (
       <SafeAreaView style={ROOT_STYLE}>
         <View className="flex-1 items-center justify-center bg-white">

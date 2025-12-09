@@ -27,7 +27,7 @@ import { textToJSX, calculateDuration } from '~/lib/helpers';
 import { getShortUrl } from '~/lib/helpers/challenge';
 
 export default function ChallengeAbout() {
-  const { getToken } = useCurrentUser();
+  const { getToken, currentUser } = useCurrentUser();
   const { userId } = useAuth();
   const { membership, challenge, setMembership } = useMemberContext();
   const handleCopy = () => {
@@ -58,15 +58,15 @@ export default function ChallengeAbout() {
 
   const handleJoinOrLeaveChallenge = () => {
     // Check if user is authenticated before allowing join
-    if (!userId && !isMember) {
+    if ((!userId || !currentUser) && !isMember) {
       Alert.alert('Sign In Required', 'Please sign in to join this challenge', [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Sign In',
           onPress: () => {
-            // Navigate to sign-up page using expo-router
+            // Navigate to sign-in page using expo-router
             const router = require('expo-router').router;
-            router.push('/(tabs)/sign-up');
+            router.push('/sign-in');
           },
         },
       ]);
@@ -118,7 +118,7 @@ export default function ChallengeAbout() {
     console.log('DEBUG: notificationTime', notificationTime.toISOString());
     console.log('DEBUG: userId from Clerk', userId);
 
-    if (!userId) {
+    if (!userId || !currentUser) {
       setError('User not authenticated. Please sign in again.');
       setJoining(false);
       return;

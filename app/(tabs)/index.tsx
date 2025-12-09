@@ -1,20 +1,8 @@
-import { Icon } from '@roninoss/icons';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Link, Stack, useRouter } from 'expo-router';
-import {
-  Platform,
-  View,
-  SafeAreaView,
-  ViewStyle,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { View, SafeAreaView, ViewStyle, ScrollView, Image, TouchableOpacity } from 'react-native';
 
-import { Container } from '~/components/Container';
-import { ScreenContent } from '~/components/ScreenContent';
-import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
 import { API_HOST } from '~/lib/environment';
 import { iconMap } from '~/lib/helpers';
@@ -26,16 +14,11 @@ async function fetchChallenges() {
 }
 
 export default function Home() {
-  console.log('🏠 Home: Component rendering');
-
   const { data, error, isLoading } = useQuery({
     queryKey: ['challenges'],
     queryFn: fetchChallenges,
   });
 
-  console.log('📊 Home: Query state:', { isLoading, error: !!error, hasData: !!data });
-
-  const { colors } = useColorScheme();
   const router = useRouter();
 
   // Ensure data is an array before mapping
@@ -49,8 +32,7 @@ export default function Home() {
           <View className="ios:pt-8 mb-4 pt-12">
             <Text
               variant="largeTitle"
-              className="ios:text-left ios:font-black text-center font-bold"
-            >
+              className="ios:text-left ios:font-black text-center font-bold">
               Welcome to Trybe
             </Text>
           </View>
@@ -61,8 +43,7 @@ export default function Home() {
               <TouchableOpacity
                 key={`${challenge.id}-${challenge.name}`}
                 className="mb-4 flex-row items-center gap-4"
-                onPress={() => router.push(`challenges/${challenge.id}/about` as any)}
-              >
+                onPress={() => router.push(`challenges/${challenge.id}/about` as any)}>
                 <Image
                   source={iconMap[challenge.icon as keyof typeof iconMap]}
                   style={{

@@ -1,11 +1,12 @@
-import { Tabs } from 'expo-router';
-import { TabBarIcon } from '~/components/TabBarIcon';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { Tabs } from 'expo-router';
+
+import { TabBarIcon } from '~/components/TabBarIcon';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 
 export default function TabsLayout() {
   console.log('📱 TabsLayout: Rendering tabs navigation');
-  
+
   const { currentUser } = useCurrentUser();
   console.log('👤 TabsLayout: Current user:', currentUser ? 'Logged in' : 'Not logged in');
 
