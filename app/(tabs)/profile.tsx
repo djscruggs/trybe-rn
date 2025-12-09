@@ -144,39 +144,38 @@ export default function Profile() {
   const primaryEmail = user?.emailAddresses.find(
     (email) => email.id === user.primaryEmailAddressId
   );
-  const externalAccounts = user?.externalAccounts || [];
+  // const externalAccounts = user?.externalAccounts || [];
 
   return (
     <SafeAreaView style={ROOT_STYLE}>
       <ScrollView className="bg-gray-50">
-        <View className="w-full px-4 py-6">
+        <View className="w-full px-4 py-20">
           {/* Page Header */}
-          <Text className="mb-6 text-2xl font-bold text-gray-900">Profile details</Text>
 
           {/* Profile Section */}
           <View className="mb-6">
-            <Text className="mb-3 text-sm font-medium text-gray-700">Profile</Text>
-
             <View className="rounded-lg bg-white p-4 shadow-sm">
               {!isEditingProfile ? (
                 <>
                   {/* View Mode */}
-                  <View className="mb-4 flex-row items-center justify-between">
-                    <Text className="text-lg font-semibold text-gray-900">Profile</Text>
+                  <View className="flex-row items-center gap-4">
+                    <UserAvatar size={60} name={user?.fullName || ''} src={user?.imageUrl} />
+                    <View className="flex-1">
+                      <Text className="text-base font-medium text-gray-900">
+                        {user?.fullName || 'No name set'}
+                        <View className="flex-row items-center gap-2">
+                          <Text className="text-base text-gray-900">
+                            {primaryEmail?.emailAddress}
+                          </Text>
+                        </View>
+                      </Text>
+                    </View>
+
                     <TouchableOpacity
                       onPress={() => setIsEditingProfile(true)}
                       className="rounded px-3 py-1.5">
                       <Text className="text-red-600 text-sm font-medium">Edit</Text>
                     </TouchableOpacity>
-                  </View>
-
-                  <View className="flex-row items-center gap-4">
-                    <UserAvatar size={60} name={user?.fullName || ''} src={user?.imageUrl} />
-                    <View>
-                      <Text className="text-base font-medium text-gray-900">
-                        {user?.fullName || 'No name set'}
-                      </Text>
-                    </View>
                   </View>
                 </>
               ) : (
@@ -192,11 +191,6 @@ export default function Profile() {
                         onPress={handleAvatarUpload}
                         className="border-red-500 rounded border px-3 py-1.5">
                         <Text className="text-red-600 text-sm font-medium">Upload</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={handleAvatarRemove}
-                        className="rounded px-3 py-1.5">
-                        <Text className="text-red-600 text-sm font-medium">Remove</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -243,35 +237,22 @@ export default function Profile() {
           </View>
 
           {/* Email Addresses Section */}
-          <View className="mb-6">
-            <Text className="mb-3 text-sm font-medium text-gray-700">Email addresses</Text>
+          {/* <View className="mb-6">
+            <Text className="mb-3 text-sm font-medium text-gray-700">Email address</Text>
 
             <View className="rounded-lg bg-white p-4 shadow-sm">
               <View className="mb-3 flex-row items-center justify-between">
                 <View className="flex-1">
                   <View className="flex-row items-center gap-2">
                     <Text className="text-base text-gray-900">{primaryEmail?.emailAddress}</Text>
-                    <View className="bg-blue-100 rounded px-2 py-0.5">
-                      <Text className="text-blue-700 text-xs font-medium">Primary</Text>
-                    </View>
                   </View>
                 </View>
-                <TouchableOpacity>
-                  <Ionicons name="ellipsis-horizontal" size={20} color="#6B7280" />
-                </TouchableOpacity>
               </View>
-
-              <TouchableOpacity
-                onPress={() => Alert.alert('Info', 'Add email feature coming soon')}
-                className="mt-2 flex-row items-center gap-2">
-                <Ionicons name="add-circle-outline" size={18} color="#DC2626" />
-                <Text className="text-red-600 text-sm font-medium">Add email address</Text>
-              </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
 
-          {/* Connected Accounts Section */}
-          <View className="mb-6">
+          {/* Connected Accounts Section - Hidden for now */}
+          {/* <View className="mb-6">
             <Text className="mb-3 text-sm font-medium text-gray-700">Connected accounts</Text>
 
             <View className="rounded-lg bg-white shadow-sm">
@@ -311,7 +292,7 @@ export default function Profile() {
                 );
               })}
             </View>
-          </View>
+          </View> */}
 
           {/* Sign Out Button */}
           <View className="mt-8 items-center">
