@@ -1,5 +1,6 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Tabs } from 'expo-router';
+import { View, StyleSheet } from 'react-native';
 
 import { TabBarIcon } from '~/components/TabBarIcon';
 import { useCurrentUser } from '~/contexts/currentuser-context';
@@ -16,6 +17,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: 'red',
         tabBarInactiveTintColor: 'gray',
+        tabBarShowLabel: false,
       }}>
       <Tabs.Screen
         name="index"
@@ -28,7 +30,7 @@ export default function TabsLayout() {
         name="my-challenges"
         options={{
           title: 'My Challenges',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="list" color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="trophy" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -42,8 +44,10 @@ export default function TabsLayout() {
         name="new"
         options={{
           title: 'Create',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <TabBarIcon name="pluscircle" type="antdesign" color={color} size={36} />
+          tabBarIcon: () => (
+            <View style={styles.centerButton}>
+              <AntDesign name="pluscircle" size={48} color="white" />
+            </View>
           ),
         }}
       />
@@ -82,3 +86,23 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  centerButton: {
+    backgroundColor: '#ef4444',
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+});
