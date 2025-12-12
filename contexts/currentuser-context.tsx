@@ -32,11 +32,21 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     queryFn: async () => {
       console.log('🌐 UserProvider: Fetching user data for userId:', userId);
       if (!userId) return null;
-      const result = await axios.get(`${API_HOST}/api/clerk/${userId}`);
-      console.log('✅ UserProvider: User data fetched successfully');
-      return result.data;
+      try {
+        const result = await axios.get(`${API_HOST}/api/clerk/${userId}`, {
+          timeout: 5000, // 5 second timeout
+        });
+        console.log('✅ UserProvider: User data fetched successfully');
+        return result.data;
+      } catch (err: any) {
+        console.error('❌ UserProvider: Failed to fetch user data:', err.message);
+        // Don't throw - let the app continue without user data
+        return null;
+      }
     },
     enabled: !!userId,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   console.log('📊 UserProvider: Query state:', { isLoading, error: !!error, hasData: !!userData });

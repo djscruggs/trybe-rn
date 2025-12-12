@@ -1,11 +1,21 @@
 import { useAuth, useSignUp, useSSO } from '@clerk/clerk-expo';
-import { SocialIcon } from '@rneui/themed';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, SafeAreaView, ViewStyle, ActivityIndicator, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import {
+  View,
+  SafeAreaView,
+  ViewStyle,
+  ActivityIndicator,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 
+import { SocialAuthButtons } from '~/components/SocialAuthButtons';
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 
@@ -35,8 +45,10 @@ export default function SignUpPage() {
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   // Redirect to home if already signed in
   useEffect(() => {
@@ -45,9 +57,36 @@ export default function SignUpPage() {
     }
   }, [isLoaded, isSignedIn, currentUser]);
 
+  // Validate password requirements
+  const validatePassword = (pwd: string): string => {
+    if (pwd.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    if (pwd.length > 64) {
+      return 'Password must not exceed 64 characters';
+    }
+    return '';
+  };
+
   // Handle Email/Password Sign Up
   const onSignUpPress = async () => {
     if (!isLoaded) return;
+
+    // Clear previous errors
+    setPasswordError('');
+
+    // Validate password
+    const passwordValidationError = validatePassword(password);
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError);
+      return;
+    }
+
+    // Check if passwords match
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
 
     try {
       await signUp!.create({
@@ -60,6 +99,10 @@ export default function SignUpPage() {
       setPendingVerification(true);
     } catch (err: any) {
       console.error('Sign up error:', JSON.stringify(err, null, 2));
+      // Handle Clerk-specific errors
+      if (err?.errors?.[0]?.message) {
+        setPasswordError(err.errors[0].message);
+      }
     }
   };
 
@@ -126,12 +169,8 @@ export default function SignUpPage() {
     <SafeAreaView style={ROOT_STYLE}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
+        style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View className="flex-1 items-center justify-center bg-white px-6 py-8">
             <View className="mb-8 items-center">
               <Text className="mb-4 text-3xl font-bold text-gray-900">
@@ -160,16 +199,33 @@ export default function SignUpPage() {
                     />
                     <TextInput
                       value={password}
-                      placeholder="Password"
+                      placeholder="Password (min 8 characters)"
                       secureTextEntry
-                      onChangeText={setPassword}
-                      className="mb-4 h-12 rounded-lg border border-gray-300 px-4"
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        setPasswordError('');
+                      }}
+                      className="mb-3 h-12 rounded-lg border border-gray-300 px-4"
                       autoComplete="password-new"
                     />
+                    <TextInput
+                      value={confirmPassword}
+                      placeholder="Confirm Password"
+                      secureTextEntry
+                      onChangeText={(text) => {
+                        setConfirmPassword(text);
+                        setPasswordError('');
+                      }}
+                      className="mb-2 h-12 rounded-lg border border-gray-300 px-4"
+                      autoComplete="password-new"
+                    />
+                    {passwordError ? (
+                      <Text className="mb-3 text-sm text-red-600">{passwordError}</Text>
+                    ) : null}
                     <TouchableOpacity
                       onPress={onSignUpPress}
-                      className="mb-6 h-12 items-center justify-center rounded-lg bg-red-600"
-                    >
+                      className="mb-0 h-12 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: '#EC5F5C' }}>
                       <Text className="font-semibold text-white">Sign Up with Email</Text>
                     </TouchableOpacity>
                   </View>
@@ -182,41 +238,13 @@ export default function SignUpPage() {
                   </View>
 
                   {/* Social Sign-In Buttons */}
-                  <View className="mb-6 gap-3">
-                    <SocialIcon
-                      type="google"
-                      iconType="font-awesome"
-                      style={{ width: '100%', height: 50, borderRadius: 8 }}
-                      title="Continue with Google"
-                      button
-                      onPress={() => onSocialSignIn('oauth_google')}
-                    />
-                    <SocialIcon
-                      type="linkedin"
-                      iconType="font-awesome"
-                      style={{ width: '100%', height: 50, borderRadius: 8 }}
-                      title="Continue with LinkedIn"
-                      button
-                      onPress={() => onSocialSignIn('oauth_linkedin_oidc')}
-                    />
-                    <SocialIcon
-                      type="slack"
-                      iconType="font-awesome"
-                      style={{ width: '100%', height: 50, borderRadius: 8, backgroundColor: '#4A154B' }}
-                      title="Continue with Slack"
-                      button
-                      onPress={() => onSocialSignIn('oauth_slack')}
-                    />
-                  </View>
+                  <SocialAuthButtons onSocialSignIn={onSocialSignIn} />
 
                   {/* Sign-In Link */}
-                  <TouchableOpacity
-                    onPress={() => router.push('/sign-in')}
-                    className="mb-4"
-                  >
+                  <TouchableOpacity onPress={() => router.push('/sign-in')} className="mb-4">
                     <Text className="text-center text-base text-gray-700">
                       Already have an account?{' '}
-                      <Text className="font-semibold text-red-600">Sign In</Text>
+                      <Text className="text-red-600 font-semibold">Sign In</Text>
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -232,8 +260,8 @@ export default function SignUpPage() {
                   />
                   <TouchableOpacity
                     onPress={onPressVerify}
-                    className="h-12 items-center justify-center rounded-lg bg-red-600"
-                  >
+                    className="h-12 items-center justify-center rounded-lg"
+                    style={{ backgroundColor: '#EC5F5C' }}>
                     <Text className="font-semibold text-white">Verify Email</Text>
                   </TouchableOpacity>
                 </View>

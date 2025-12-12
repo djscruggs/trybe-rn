@@ -201,13 +201,15 @@ interface LinksToFormat {
 }
 export function formatLinks(props: LinksToFormat): JSX.Element[] {
   console.log('formatLinks', props);
-  const { links } = props;
+  const { links, keyPrefix } = props;
   if (!links || links.length === 0) return [];
-  return links.map((link) => (
-    <TouchableOpacity onPress={() => Linking.openURL(link)}>
-      <Text className="mt-4 text-blue">{link}</Text>
-    </TouchableOpacity>
-  ));
+  return links
+    .filter((link) => link && link.trim() !== '')
+    .map((link, index) => (
+      <TouchableOpacity key={`${keyPrefix}-${index}`} onPress={() => Linking.openURL(link)}>
+        <Text className="mt-4 text-blue">{link}</Text>
+      </TouchableOpacity>
+    ));
 }
 
 export function iconToJsx(icon: string, color: string): React.ReactNode {

@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "android": "expo run:android",
+    "android": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:3000 tcp:3000 && expo run:android",
     "ios": "expo run:ios",
-    "start": "expo start",
+    "start": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:3000 tcp:3000 && expo start --host lan",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
     "web": "expo start --web",

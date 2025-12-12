@@ -1,0 +1,27 @@
+diff --git a/node_modules/expo-image-picker/android/build.gradle b/node_modules/expo-image-picker/android/build.gradle
+index f04b113..15db294 100644
+--- a/node_modules/expo-image-picker/android/build.gradle
++++ b/node_modules/expo-image-picker/android/build.gradle
+@@ -1,7 +1,8 @@
+-plugins {
+-  id 'com.android.library'
+-  id 'expo-module-gradle-plugin'
+-}
++apply plugin: 'com.android.library'
++
++def expoModulesCorePlugin = new File(project(':expo-modules-core').projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
++apply from: expoModulesCorePlugin
++applyKotlinExpoModulesCorePlugin()
+ 
+ group = 'host.exp.exponent'
+ version = '17.0.9'
+@@ -18,6 +19,9 @@ android {
+   }
+ }
+ 
++useDefaultAndroidSdkVersions()
++useCoreDependencies()
++
+ dependencies {
+   implementation "androidx.activity:activity-ktx:1.10.0"
+   implementation "androidx.appcompat:appcompat:1.7.0"

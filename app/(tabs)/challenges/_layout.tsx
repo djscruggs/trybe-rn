@@ -10,7 +10,7 @@ export default function ChallengesLayout() {
         options={{
           headerTitle: '',
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.dismissAll()}>
+            <TouchableOpacity onPress={() => router.push('/')}>
               <Ionicons name="home" size={24} color="black" />
             </TouchableOpacity>
           ),

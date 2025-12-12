@@ -4,6 +4,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
+import * as Notifications from 'expo-notifications';
 import { DateTimeFormatOptions } from 'intl';
 import { useState, useEffect } from 'react';
 import {
@@ -14,6 +15,7 @@ import {
   Platform,
   Alert,
   Linking,
+  AppState,
 } from 'react-native';
 import Share from 'react-native-share';
 
@@ -46,6 +48,38 @@ export default function ChallengeAbout() {
   const [showTimePicker, setShowTimePicker] = useState(Platform.OS === 'ios');
   const [pickerMode, setPickerMode] = useState<'time' | 'date'>('time');
   const [hasPromptedForNotifications, setHasPromptedForNotifications] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  // Check notification permissions
+  useEffect(() => {
+    const checkNotifications = async () => {
+      if (Platform.OS === 'web') {
+        setNotificationsEnabled(true);
+        return;
+      }
+
+      try {
+        const { status } = await Notifications.getPermissionsAsync();
+        setNotificationsEnabled(status === 'granted');
+      } catch (error) {
+        console.error('Error checking notification permissions:', error);
+        setNotificationsEnabled(false);
+      }
+    };
+
+    checkNotifications();
+
+    // Re-check when app comes to foreground (e.g., after returning from Settings)
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        checkNotifications();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // Check if user has been prompted for notifications before
   useEffect(() => {
@@ -139,7 +173,18 @@ export default function ChallengeAbout() {
         'This challenge requires notifications. Please enable them in your device settings.',
         [
           { text: 'OK' },
-          { text: 'Open Settings', onPress: () => Linking.openSettings() }
+          {
+            text: 'Open Settings',
+            onPress: () => {
+              Linking.openSettings().catch(err => {
+                console.error('Failed to open settings:', err);
+                Alert.alert(
+                  'Unable to Open Settings',
+                  'Please open your device Settings app manually and enable notifications for this app.'
+                );
+              });
+            }
+          }
         ]
       );
       // Mark that we've prompted the user
@@ -271,26 +316,37 @@ export default function ChallengeAbout() {
           </View>
         )}
 
-        {/* Notification Reminder - Show to all users */}
-        {Platform.OS !== 'web' && (
-          <View className="mb-4 rounded-lg bg-blue-50 p-4">
-            <View className="mb-2 flex-row items-center">
-              <Feather name="bell" size={20} color="#3b82f6" />
-              <Text className="ml-2 font-semibold text-blue-900">Enable Notifications</Text>
-            </View>
-            <Text className="mb-3 text-sm text-blue-800">
-              Get daily reminders for this challenge. Enable notifications in your device settings to stay on track.
-            </Text>
-            <TouchableOpacity
-              onPress={() => Linking.openSettings()}
-              className="rounded-md bg-blue-600 px-4 py-2"
-            >
-              <Text className="text-center text-sm font-semibold text-white">
-                Open Settings
+        {/* Notification Reminder - Show conditionally */}
+        {Platform.OS !== 'web' &&
+          !notificationsEnabled &&
+          (isMember || (challenge?.userId === currentUser?.id && challenge?.status !== 'DRAFT')) && (
+            <View className="mb-4 rounded-lg bg-blue-50 p-4">
+              <View className="mb-2 flex-row items-center">
+                <Feather name="bell" size={20} color="#3b82f6" />
+                <Text className="ml-2 font-semibold text-blue-900">Enable Notifications</Text>
+              </View>
+              <Text className="mb-3 text-sm text-blue-800">
+                Get daily reminders for this challenge. Enable notifications in your device settings
+                to stay on track.
               </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+              <TouchableOpacity
+                onPress={() => {
+                  console.log('Open Settings button pressed');
+                  Linking.openSettings().catch((err) => {
+                    console.error('Failed to open settings:', err);
+                    Alert.alert(
+                      'Unable to Open Settings',
+                      'Please open your device Settings app manually and enable notifications for this app.'
+                    );
+                  });
+                }}
+                className="rounded-md bg-blue-600 px-4 py-2">
+                <Text className="text-center text-sm font-semibold text-white">
+                  Open Settings
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
         <View className="relative min-h-20  w-full flex-col items-center justify-center">
           <TouchableOpacity

@@ -1,20 +1,22 @@
+import { useAuth } from '@clerk/clerk-expo';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 
+import { AppHeader } from '~/components/AppHeader';
 import { TabBarIcon } from '~/components/TabBarIcon';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 
 export default function TabsLayout() {
-  console.log('📱 TabsLayout: Rendering tabs navigation');
-
   const { currentUser } = useCurrentUser();
+  const { isSignedIn } = useAuth();
   console.log('👤 TabsLayout: Current user:', currentUser ? 'Logged in' : 'Not logged in');
 
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        header: () => <AppHeader />,
         tabBarActiveTintColor: 'red',
         tabBarInactiveTintColor: 'gray',
         tabBarShowLabel: false,
@@ -27,20 +29,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="my-challenges"
-        options={{
-          title: 'My Challenges',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="trophy" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="community"
-        options={{
-          title: 'Community',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="users" color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="new"
         options={{
           title: 'Create',
@@ -50,12 +38,34 @@ export default function TabsLayout() {
             </View>
           ),
         }}
+        listeners={{
+          tabPress: (e: any) => {
+            if (!isSignedIn) {
+              e.preventDefault();
+              router.push('/sign-up');
+            }
+          },
+        }}
+      />
+      <Tabs.Screen
+        name="my-challenges"
+        options={{
+          title: 'My Challenges',
+          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="trophy" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: 'Community',
+          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="users" color={color} />,
+        }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="user" color={color} />,
+          href: null,
         }}
       />
       <Tabs.Screen

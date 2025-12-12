@@ -1,11 +1,21 @@
 import { useAuth, useSignIn, useSSO } from '@clerk/clerk-expo';
-import { SocialIcon } from '@rneui/themed';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, SafeAreaView, ViewStyle, ActivityIndicator, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import {
+  View,
+  SafeAreaView,
+  ViewStyle,
+  ActivityIndicator,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 
+import { SocialAuthButtons } from '~/components/SocialAuthButtons';
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 
@@ -101,17 +111,11 @@ export default function SignInPage() {
     <SafeAreaView style={ROOT_STYLE}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
+        style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View className="flex-1 items-center justify-center bg-white px-6 py-8">
             <View className="mb-8 items-center">
-              <Text className="mb-4 text-3xl font-bold text-gray-900">
-                Welcome Back
-              </Text>
+              <Text className="mb-4 text-3xl font-bold text-gray-900">Welcome Back</Text>
               <Text className="text-center text-base text-gray-600">
                 Sign in to continue your journey with Trybe
               </Text>
@@ -139,8 +143,8 @@ export default function SignInPage() {
                 />
                 <TouchableOpacity
                   onPress={onSignInPress}
-                  className="mb-6 h-12 items-center justify-center rounded-lg bg-red-600"
-                >
+                  className="mb-0 h-12 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: '#EC5F5C' }}>
                   <Text className="font-semibold text-white">Sign In with Email</Text>
                 </TouchableOpacity>
               </View>
@@ -153,41 +157,12 @@ export default function SignInPage() {
               </View>
 
               {/* Social Sign-In Buttons */}
-              <View className="mb-6 gap-3">
-                <SocialIcon
-                  type="google"
-                  iconType="font-awesome"
-                  style={{ width: '100%', height: 50, borderRadius: 8 }}
-                  title="Continue with Google"
-                  button
-                  onPress={() => onSocialSignIn('oauth_google')}
-                />
-                <SocialIcon
-                  type="linkedin"
-                  iconType="font-awesome"
-                  style={{ width: '100%', height: 50, borderRadius: 8 }}
-                  title="Continue with LinkedIn"
-                  button
-                  onPress={() => onSocialSignIn('oauth_linkedin_oidc')}
-                />
-                <SocialIcon
-                  type="slack"
-                  iconType="font-awesome"
-                  style={{ width: '100%', height: 50, borderRadius: 8, backgroundColor: '#4A154B' }}
-                  title="Continue with Slack"
-                  button
-                  onPress={() => onSocialSignIn('oauth_slack')}
-                />
-              </View>
+              <SocialAuthButtons onSocialSignIn={onSocialSignIn} />
 
               {/* Sign-Up Link */}
-              <TouchableOpacity
-                onPress={() => router.push('/sign-up')}
-                className="mb-4"
-              >
+              <TouchableOpacity onPress={() => router.push('/sign-up')} className="mb-4">
                 <Text className="text-center text-base text-gray-700">
-                  Don't have an account?{' '}
-                  <Text className="font-semibold text-red-600">Sign Up</Text>
+                  Don't have an account? <Text className="text-red-600 font-semibold">Sign Up</Text>
                 </Text>
               </TouchableOpacity>
             </View>

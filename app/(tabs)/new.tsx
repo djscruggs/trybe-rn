@@ -1,3 +1,5 @@
+import axios from 'axios';
+import { router } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -11,11 +13,10 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { router } from 'expo-router';
-import axios from 'axios';
-import { Text } from '~/components/nativewindui/Text';
-import { Picker, PickerItem } from '~/components/nativewindui/Picker';
+
 import { DatePicker } from '~/components/nativewindui/DatePicker/DatePicker';
+import { Picker, PickerItem } from '~/components/nativewindui/Picker';
+import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { API_HOST } from '~/lib/environment';
 import { iconMap } from '~/lib/helpers';
@@ -39,10 +40,9 @@ const FREQUENCIES = ['DAILY', 'WEEKDAYS', 'WEEKLY'] as const;
 const COLORS = ['red', 'orange', 'salmon', 'yellow', 'green', 'blue', 'purple'] as const;
 
 // Get available icon keys from iconMap
-const AVAILABLE_ICONS = Object.keys(iconMap) as Array<keyof typeof iconMap>;
+const AVAILABLE_ICONS = Object.keys(iconMap) as (keyof typeof iconMap)[];
 
 export default function NewChallengeScreen() {
-  const { currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -70,7 +70,7 @@ export default function NewChallengeScreen() {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(`${API_HOST}/api/categories`);
-        setCategories(response.data);
+        setCategories(response.data.categories || []);
       } catch (error) {
         console.error('Error loading categories:', error);
         Alert.alert('Error', 'Failed to load categories');
@@ -139,6 +139,7 @@ export default function NewChallengeScreen() {
         newErrors.numDays = 'Number of Days is required';
       }
     }
+    console.log(newErrors);
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -170,10 +171,7 @@ export default function NewChallengeScreen() {
 
       // Add categories as JSON
       if (formData.categories) {
-        submitData.append(
-          'categories',
-          JSON.stringify(formData.categories.map((c) => c.id))
-        );
+        submitData.append('categories', JSON.stringify(formData.categories.map((c) => c.id)));
       }
 
       // Add type-specific fields
@@ -210,10 +208,7 @@ export default function NewChallengeScreen() {
       }
     } catch (error: any) {
       console.error('Error creating challenge:', error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Failed to create challenge'
-      );
+      Alert.alert('Error', error.response?.data?.message || 'Failed to create challenge');
     } finally {
       setLoading(false);
     }
@@ -233,8 +228,7 @@ export default function NewChallengeScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
+        className="flex-1">
         <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
           <View className="p-6">
             {/* Header */}
@@ -247,16 +241,14 @@ export default function NewChallengeScreen() {
 
             {/* Challenge Name */}
             <View className="mb-4">
-              <Text className="mb-2 text-base font-medium text-gray-700">
-                Name of Challenge *
-              </Text>
+              <Text className="mb-2 text-base font-medium text-gray-700">Name of Challenge *</Text>
               <TextInput
                 value={formData.name || ''}
                 onChangeText={(text) => updateField('name', text)}
                 placeholder="Give your challenge a catchy name"
                 className="h-12 rounded-lg border border-gray-300 px-4"
               />
-              {errors.name && <Text className="mt-1 text-sm text-red-500">{errors.name}</Text>}
+              {errors.name && <Text className="text-red-500 mt-1 text-sm">{errors.name}</Text>}
             </View>
 
             {/* Description */}
@@ -272,7 +264,7 @@ export default function NewChallengeScreen() {
                 className="rounded-lg border border-gray-300 p-4"
               />
               {errors.description && (
-                <Text className="mt-1 text-sm text-red-500">{errors.description}</Text>
+                <Text className="text-red-500 mt-1 text-sm">{errors.description}</Text>
               )}
             </View>
 
@@ -288,9 +280,8 @@ export default function NewChallengeScreen() {
                         key={category.id}
                         onPress={() => toggleCategory(category)}
                         className={`rounded-full px-4 py-2 ${
-                          isSelected ? 'bg-red-500' : 'bg-gray-200'
-                        }`}
-                      >
+                          isSelected ? 'bg-red' : 'bg-gray-200'
+                        }`}>
                         <Text className={isSelected ? 'text-white' : 'text-gray-700'}>
                           {category.name}
                         </Text>
@@ -304,7 +295,7 @@ export default function NewChallengeScreen() {
                 </View>
               )}
               {errors.categories && (
-                <Text className="mt-1 text-sm text-red-500">{errors.categories}</Text>
+                <Text className="text-red-500 mt-1 text-sm">{errors.categories}</Text>
               )}
             </View>
 
@@ -313,8 +304,7 @@ export default function NewChallengeScreen() {
               <Text className="mb-2 text-base font-medium text-gray-700">Select Frequency</Text>
               <Picker
                 selectedValue={formData.frequency}
-                onValueChange={(value) => updateField('frequency', value)}
-              >
+                onValueChange={(value) => updateField('frequency', value)}>
                 {FREQUENCIES.map((freq) => (
                   <PickerItem key={freq} label={freq} value={freq} />
                 ))}
@@ -329,13 +319,11 @@ export default function NewChallengeScreen() {
                   onPress={() => updateField('type', 'SCHEDULED')}
                   className={`flex-1 rounded-lg border-2 p-4 ${
                     formData.type === 'SCHEDULED' ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
+                  }`}>
                   <Text
                     className={`font-semibold ${
                       formData.type === 'SCHEDULED' ? 'text-red-500' : 'text-gray-700'
-                    }`}
-                  >
+                    }`}>
                     Scheduled
                   </Text>
                   <Text className="mt-1 text-sm text-gray-600">Happen on specific dates</Text>
@@ -344,13 +332,11 @@ export default function NewChallengeScreen() {
                   onPress={() => updateField('type', 'SELF_LED')}
                   className={`flex-1 rounded-lg border-2 p-4 ${
                     formData.type === 'SELF_LED' ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
+                  }`}>
                   <Text
                     className={`font-semibold ${
                       formData.type === 'SELF_LED' ? 'text-red-500' : 'text-gray-700'
-                    }`}
-                  >
+                    }`}>
                     Self-Directed
                   </Text>
                   <Text className="mt-1 text-sm text-gray-600">Can be started at any time</Text>
@@ -377,7 +363,7 @@ export default function NewChallengeScreen() {
                   className="h-12 rounded-lg border border-gray-300 px-4"
                 />
                 {errors.numDays && (
-                  <Text className="mt-1 text-sm text-red-500">{errors.numDays}</Text>
+                  <Text className="text-red-500 mt-1 text-sm">{errors.numDays}</Text>
                 )}
               </View>
             ) : (
@@ -386,11 +372,11 @@ export default function NewChallengeScreen() {
                 <View className="mb-4">
                   <Text className="mb-2 text-base font-medium text-gray-700">Start Date *</Text>
                   <DatePicker
-                    value={formData.startAt || new Date()}
+                    value={formData.startAt instanceof Date ? formData.startAt : new Date()}
                     onChange={(date) => {
                       updateField('startAt', date);
                       // Auto-calculate end date (30 days later)
-                      if (!formData.endAt && date) {
+                      if (!formData.endAt && date instanceof Date) {
                         const endDate = new Date(date);
                         endDate.setDate(endDate.getDate() + 30);
                         updateField('endAt', endDate);
@@ -399,7 +385,7 @@ export default function NewChallengeScreen() {
                     minimumDate={new Date()}
                   />
                   {errors.startAt && (
-                    <Text className="mt-1 text-sm text-red-500">{errors.startAt}</Text>
+                    <Text className="text-red-500 mt-1 text-sm">{errors.startAt}</Text>
                   )}
                 </View>
 
@@ -407,17 +393,17 @@ export default function NewChallengeScreen() {
                 <View className="mb-4">
                   <Text className="mb-2 text-base font-medium text-gray-700">End Date *</Text>
                   <DatePicker
-                    value={formData.endAt || new Date()}
+                    value={formData.endAt instanceof Date ? formData.endAt : new Date()}
                     onChange={(date) => updateField('endAt', date)}
                     minimumDate={
-                      formData.startAt
-                        ? new Date(
-                            new Date(formData.startAt).getTime() + 7 * 24 * 60 * 60 * 1000
-                          )
+                      formData.startAt instanceof Date
+                        ? new Date(formData.startAt.getTime() + 7 * 24 * 60 * 60 * 1000)
                         : new Date()
                     }
                   />
-                  {errors.endAt && <Text className="mt-1 text-sm text-red-500">{errors.endAt}</Text>}
+                  {errors.endAt && (
+                    <Text className="text-red-500 mt-1 text-sm">{errors.endAt}</Text>
+                  )}
                 </View>
               </>
             )}
@@ -430,13 +416,11 @@ export default function NewChallengeScreen() {
                   onPress={() => updateField('public', true)}
                   className={`flex-1 rounded-lg border-2 p-4 ${
                     formData.public ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
+                  }`}>
                   <Text
                     className={`text-center font-semibold ${
                       formData.public ? 'text-red-500' : 'text-gray-700'
-                    }`}
-                  >
+                    }`}>
                     Anyone
                   </Text>
                 </TouchableOpacity>
@@ -444,13 +428,11 @@ export default function NewChallengeScreen() {
                   onPress={() => updateField('public', false)}
                   className={`flex-1 rounded-lg border-2 p-4 ${
                     !formData.public ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
+                  }`}>
                   <Text
                     className={`text-center font-semibold ${
                       !formData.public ? 'text-red-500' : 'text-gray-700'
-                    }`}
-                  >
+                    }`}>
                     Invite only
                   </Text>
                 </TouchableOpacity>
@@ -465,13 +447,11 @@ export default function NewChallengeScreen() {
                   onPress={() => updateField('status', 'PUBLISHED')}
                   className={`flex-1 rounded-lg border-2 p-4 ${
                     formData.status === 'PUBLISHED' ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
+                  }`}>
                   <Text
                     className={`text-center font-semibold ${
                       formData.status === 'PUBLISHED' ? 'text-red-500' : 'text-gray-700'
-                    }`}
-                  >
+                    }`}>
                     Published
                   </Text>
                 </TouchableOpacity>
@@ -479,13 +459,11 @@ export default function NewChallengeScreen() {
                   onPress={() => updateField('status', 'DRAFT')}
                   className={`flex-1 rounded-lg border-2 p-4 ${
                     formData.status === 'DRAFT' ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
+                  }`}>
                   <Text
                     className={`text-center font-semibold ${
                       formData.status === 'DRAFT' ? 'text-red-500' : 'text-gray-700'
-                    }`}
-                  >
+                    }`}>
                     Draft
                   </Text>
                 </TouchableOpacity>
@@ -500,8 +478,8 @@ export default function NewChallengeScreen() {
                   <TouchableOpacity
                     key={color}
                     onPress={() => updateField('color', color)}
-                    className={`h-12 w-12 rounded-full ${
-                      formData.color === color ? 'border-4 border-gray-800' : ''
+                    className={`h-9 w-9 rounded-full ${
+                      formData.color === color ? 'border border-gray-800' : ''
                     }`}
                     style={{ backgroundColor: color }}
                   />
@@ -517,10 +495,9 @@ export default function NewChallengeScreen() {
                   <TouchableOpacity
                     key={iconKey}
                     onPress={() => updateField('icon', iconKey)}
-                    className={`rounded-lg border-2 p-2 ${
+                    className={`rounded-lg border p-1 ${
                       formData.icon === iconKey ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
-                  >
+                    }`}>
                     <Image
                       source={iconMap[iconKey]}
                       style={{
@@ -532,7 +509,7 @@ export default function NewChallengeScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-              {errors.icon && <Text className="mt-1 text-sm text-red-500">{errors.icon}</Text>}
+              {errors.icon && <Text className="text-red-500 mt-1 text-sm">{errors.icon}</Text>}
             </View>
 
             {/* Submit Buttons */}
@@ -540,15 +517,13 @@ export default function NewChallengeScreen() {
               <TouchableOpacity
                 onPress={() => router.back()}
                 disabled={loading}
-                className="flex-1 rounded-lg border-2 border-gray-300 p-4"
-              >
+                className="flex-1 rounded-lg border-2 border-gray-300 p-2">
                 <Text className="text-center font-semibold text-gray-700">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSubmit}
                 disabled={loading}
-                className="flex-1 rounded-lg bg-red-500 p-4"
-              >
+                className="flex-1 rounded-lg border bg-red p-2">
                 {loading ? (
                   <ActivityIndicator color="white" />
                 ) : (

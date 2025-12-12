@@ -227,7 +227,7 @@ export default function Profile() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={handleSaveProfile}
-                      className="bg-red-500 rounded px-4 py-2">
+                      className="rounded bg-red px-4 py-2">
                       <Text className="text-sm font-medium text-white">Save</Text>
                     </TouchableOpacity>
                   </View>
