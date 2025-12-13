@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { Container } from '~/components/Container';
+import { ChallengeListItem } from '~/components/ChallengeListItem';
 import { ScreenContent } from '~/components/ScreenContent';
 import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
@@ -55,22 +56,11 @@ export default function MyChallenges() {
             {isLoading && <Text>Loading...</Text>}
             {error && <Text>Error loading challenges</Text>}
             {challenges?.map((challenge: any) => (
-              <TouchableOpacity
+              <ChallengeListItem
                 key={`${challenge.id}-${challenge.name}`}
-                className="mb-4 flex-row items-center gap-4"
-                onPress={() => router.push(`challenges/${challenge.id}/about` as any)}>
-                <Image
-                  source={iconMap[challenge.icon as keyof typeof iconMap]}
-                  style={{
-                    width: 60,
-                    height: 60,
-                    borderWidth: 1,
-                    borderColor: challenge.color,
-                    borderRadius: 10,
-                  }}
-                />
-                <Text className="flex-1 font-bold">{challenge.name}</Text>
-              </TouchableOpacity>
+                challenge={challenge}
+                onPress={() => router.push(`challenges/${challenge.id}/about` as any)}
+              />
             ))}
           </View>
         </View>

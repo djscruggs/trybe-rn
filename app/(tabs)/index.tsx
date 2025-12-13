@@ -4,6 +4,7 @@ import { Stack, useRouter } from 'expo-router';
 import { View, SafeAreaView, ViewStyle, ScrollView, Image, TouchableOpacity } from 'react-native';
 
 import { Text } from '~/components/nativewindui/Text';
+import { ChallengeListItem } from '~/components/ChallengeListItem';
 import { API_HOST } from '~/lib/environment';
 import { iconMap } from '~/lib/helpers';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -24,42 +25,43 @@ export default function Home() {
   // Ensure data is an array before mapping
   const challenges = Array.isArray(data?.challenges) ? data.challenges : [];
   console.log('🎯 Home: Challenges count:', challenges.length);
+
   return (
-    <SafeAreaView style={ROOT_STYLE}>
-      <Stack.Screen options={{ title: 'TRYBE' }} />
-      <ScrollView className="bg-white">
-        <View className="mx-auto w-full flex-1 justify-between px-2 py-4">
-          <View className="ios:pt-8 mb-4 pt-12">
-            <Text
-              variant="largeTitle"
-              className="ios:text-left ios:font-black text-center font-bold">
-              Welcome to Trybe
-            </Text>
+    <View style={ROOT_STYLE} className="bg-background">
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScrollView className="bg-background" contentContainerClassName="pb-12">
+        {/* Splash-like Header Section */}
+        <View className="items-center justify-center bg-teal pb-12 pt-20">
+          <View className="mb-6 h-32 w-32 items-center justify-center rounded-full bg-white shadow-lg">
+            {/* Find a way to display a logo here if possible, for now just a placeholder or the icon */}
+            <Text className="font-reklame text-6xl text-teal">T</Text>
           </View>
-          <View>
-            {isLoading && <Text>Loading...</Text>}
-            {error && <Text>Error loading challenges</Text>}
+          <Text className="font-reklame text-5xl text-white">Trybe</Text>
+          <Text className="mt-2 font-source text-lg text-white opacity-90">
+            Find your people. Join the challenge.
+          </Text>
+        </View>
+
+        {/* Content Section */}
+        <View className="-mt-6 flex-1 rounded-t-3xl bg-background px-6 pt-8">
+          <Text className="mb-6 font-reklame text-3xl text-teal">
+            Active Challenges
+          </Text>
+
+          {isLoading && <Text className="text-center font-source text-gray-500">Loading...</Text>}
+          {error && <Text className="text-center font-source text-red-500">Error loading challenges</Text>}
+
+          <View className="gap-4">
             {challenges?.map((challenge: any) => (
-              <TouchableOpacity
+              <ChallengeListItem
                 key={`${challenge.id}-${challenge.name}`}
-                className="mb-4 flex-row items-center gap-4"
-                onPress={() => router.push(`challenges/${challenge.id}/about` as any)}>
-                <Image
-                  source={iconMap[challenge.icon as keyof typeof iconMap]}
-                  style={{
-                    width: 60,
-                    height: 60,
-                    borderWidth: 1,
-                    borderColor: challenge.color,
-                    borderRadius: 10,
-                  }}
-                />
-                <Text className="flex-1 font-bold">{challenge.name}</Text>
-              </TouchableOpacity>
+                challenge={challenge}
+                onPress={() => router.push(`challenges/${challenge.id}/about` as any)}
+              />
             ))}
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

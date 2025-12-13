@@ -71,6 +71,11 @@ module.exports = {
       borderWidth: {
         hairline: hairlineWidth(),
       },
+      fontFamily: {
+        reklame: ['ReklameScript-Regular'],
+        source: ['SourceSansPro-Regular'],
+        taprom: ['Taprom-Regular'],
+      },
     },
   },
   plugins: [],

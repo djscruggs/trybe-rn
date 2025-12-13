@@ -60,7 +60,7 @@ export default function ChallengeLayout() {
           {error && <Text className="text-red-500">Error loading challenge details</Text>}
         </View>
       ) : (
-        <View className="mt-4 p-2">
+        <View className="pl-2 pr-2 pt-2">
           <View className="mr-2 flex-row items-center ">
             <Image
               source={iconMap[challenge.icon as keyof typeof iconMap]}
@@ -102,7 +102,7 @@ const ChallengeDetailNavigation = ({ challenge }: { challenge: Challenge }) => {
       </Link>
       <Link
         href={`/challenges/${challenge.id}/chat`}
-        className={`${isCurrentRoute(`/chat`) ? 'font-bold text-red' : 'text-gray-500'}`}>
+        className={`mr-4 ${isCurrentRoute(`/chat`) ? 'font-bold text-red' : 'text-gray-500'}`}>
         Chat
       </Link>
       <CheckInButton />

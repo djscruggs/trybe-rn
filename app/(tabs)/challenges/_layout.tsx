@@ -8,12 +8,7 @@ export default function ChallengesLayout() {
       <Stack.Screen
         name="[id]"
         options={{
-          headerTitle: '',
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.push('/')}>
-              <Ionicons name="home" size={24} color="black" />
-            </TouchableOpacity>
-          ),
+          headerShown: false,
         }}
       />
     </Stack>
