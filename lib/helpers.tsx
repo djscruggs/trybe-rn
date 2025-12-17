@@ -12,7 +12,7 @@ import toast from 'react-native-toast-message';
 
 import type { CurrentUser, User } from './types';
 
-import { youtubeRegex } from '~/components/link-renderer';
+import { youtubeRegex } from '~/components/LinkRenderer';
 
 export const iconMap = {
   Celebrate: require('../assets/icons/Celebrate.png'),

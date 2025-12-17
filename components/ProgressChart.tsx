@@ -1,6 +1,6 @@
 import { differenceInDays, format } from 'date-fns';
 
-import CircularProgress from '~/components/circular-progess';
+import CircularProgress from '~/components/CircularProgress';
 import 'react-circular-progressbar/dist/styles.css';
 import type { Challenge, CheckIn } from '~/lib/types';
 

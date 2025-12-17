@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native';
 
-import CircleExample from '~/components/circle-example';
+import CircleExample from '~/components/CircleExample';
 import { useMemberContext } from '~/contexts/member-context';
 import { textToJSX } from '~/lib/helpers';
 export default function ChallengeProgress() {

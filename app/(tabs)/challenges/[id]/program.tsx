@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Text, View, ScrollView } from 'react-native';
 
-import ChallengeSchedule from '~/components/challenge-schedule';
+import ChallengeSchedule from '~/components/ChallengeSchedule';
 import { useMemberContext } from '~/contexts/member-context';
 import { API_HOST } from '~/lib/environment';
 import { Challenge } from '~/lib/types';

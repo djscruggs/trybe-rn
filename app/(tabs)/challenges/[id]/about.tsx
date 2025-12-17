@@ -19,9 +19,9 @@ import {
 } from 'react-native';
 import Share from 'react-native-share';
 
-import ChallengeNotificationModal from '~/components/challenge-notification-modal';
-import ErrorText from '~/components/error-text';
-import LinkRenderer from '~/components/link-renderer';
+import ChallengeNotificationModal from '~/components/ChallengeNotificationModal';
+import ErrorText from '~/components/ErrorText';
+import LinkRenderer from '~/components/LinkRenderer';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { useMemberContext } from '~/contexts/member-context';
 import { API_HOST } from '~/lib/environment';

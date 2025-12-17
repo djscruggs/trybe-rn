@@ -8,7 +8,7 @@ import { ActivityIndicator } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import toast from 'react-native-toast-message';
 
-import LinkRenderer from '~/components/link-renderer';
+import LinkRenderer from '~/components/LinkRenderer';
 import { CurrentUserContext } from '~/contexts/currentuser-context';
 import { useMemberContext } from '~/contexts/member-context';
 import { userLocale, pluralize, textToJSX } from '~/lib/helpers';

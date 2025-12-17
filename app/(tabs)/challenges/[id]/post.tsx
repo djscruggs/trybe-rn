@@ -5,7 +5,7 @@ import React from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import UserAvatar from 'react-native-user-avatar';
 
-import LinkRenderer from '~/components/link-renderer';
+import LinkRenderer from '~/components/LinkRenderer';
 import { useMemberContext } from '~/contexts/member-context';
 import { API_HOST } from '~/lib/environment';
 import { textToJSX } from '~/lib/helpers';

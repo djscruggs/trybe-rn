@@ -1,6 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { StyleSheet } from 'react-native';
+import { View } from 'react-native';
 
 /**
  * TabBarIcon component renders an icon for the bottom tab navigation.
@@ -15,11 +15,9 @@ export const TabBarIcon = (props: {
 }) => {
   const { name, color, type = 'fontawesome', size = 32 } = props;
   const IconComponent = type === 'antdesign' ? AntDesign : FontAwesome;
-  return <IconComponent name={name as any} color={color} size={size} style={styles.tabBarIcon} />;
+  return (
+    <View className="-mb-[3px]">
+      <IconComponent name={name as any} color={color} size={size} />
+    </View>
+  );
 };
-
-export const styles = StyleSheet.create({
-  tabBarIcon: {
-    marginBottom: -3,
-  },
-});

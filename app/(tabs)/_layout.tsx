@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/clerk-expo';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Tabs, router } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -45,7 +45,7 @@ function TabsContent() {
           options={{
             title: 'Create',
             tabBarIcon: () => (
-              <View style={styles.centerButton}>
+              <View className="mb-5 h-[60px] w-[60px] items-center justify-center rounded-[30px] bg-red-500 shadow-lg">
                 <AntDesign name="pluscircle" size={48} color="white" />
               </View>
             ),
@@ -128,22 +128,3 @@ export default function TabsLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  centerButton: {
-    backgroundColor: '#ef4444',
-    borderRadius: 30,
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-});
