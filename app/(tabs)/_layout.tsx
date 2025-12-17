@@ -1,22 +1,23 @@
 import { useAuth } from '@clerk/clerk-expo';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Tabs, router } from 'expo-router';
 import { View } from 'react-native';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppHeader } from '~/components/AppHeader';
+import { AuthSheet } from '~/components/AuthSheet';
+import { NewChallengeSheet } from '~/components/NewChallengeSheet';
 import { TabBarIcon } from '~/components/TabBarIcon';
+import { AuthSheetProvider, useAuthSheet } from '~/contexts/auth-sheet-context';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import {
   NewChallengeSheetProvider,
   useNewChallengeSheet,
 } from '~/contexts/new-challenge-sheet-context';
-import { NewChallengeSheet } from '~/components/NewChallengeSheet';
-import { AuthSheetProvider, useAuthSheet } from '~/contexts/auth-sheet-context';
-import { AuthSheet } from '~/components/AuthSheet';
 
 function TabsContent() {
+  const red = '#EC5F5C';
   const { currentUser } = useCurrentUser();
   const { isSignedIn } = useAuth();
   const { openSheet, sheetRef } = useNewChallengeSheet();
@@ -29,7 +30,7 @@ function TabsContent() {
         screenOptions={{
           headerShown: true,
           header: () => <AppHeader />,
-          tabBarActiveTintColor: 'red',
+          tabBarActiveTintColor: red,
           tabBarInactiveTintColor: 'gray',
           tabBarShowLabel: false,
         }}>
@@ -45,8 +46,8 @@ function TabsContent() {
           options={{
             title: 'Create',
             tabBarIcon: () => (
-              <View className="mb-5 h-[60px] w-[60px] items-center justify-center rounded-[30px] bg-red-500 shadow-lg">
-                <AntDesign name="pluscircle" size={48} color="white" />
+              <View className="bg-red-500 mb-5 h-[60px] w-[60px] items-center justify-center rounded-[30px] shadow-lg">
+                <AntDesign name="pluscircle" size={48} color={red} />
               </View>
             ),
           }}
@@ -61,56 +62,58 @@ function TabsContent() {
             },
           }}
         />
-      <Tabs.Screen
-        name="my-challenges"
-        options={{
-          title: 'My Challenges',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="trophy" color={color} />,
-        }}
-      />
+        <Tabs.Screen
+          name="my-challenges"
+          options={{
+            title: 'My Challenges',
+            tabBarIcon: ({ color }: { color: string }) => (
+              <TabBarIcon name="trophy" color={color} />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="community"
-        options={{
-          title: 'Community',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="users" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="about"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="sign-up"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="sign-in"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="challenges"
-        options={{
-          href: null,
-          tabBarStyle: { display: 'flex' },
-        }}
-      />
-    </Tabs>
-    <NewChallengeSheet ref={sheetRef} />
-    <AuthSheet ref={authSheetRef} />
-  </>
+        <Tabs.Screen
+          name="community"
+          options={{
+            title: 'Community',
+            tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="users" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="about"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="sign-up"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="sign-in"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="challenges"
+          options={{
+            href: null,
+            tabBarStyle: { display: 'flex' },
+          }}
+        />
+      </Tabs>
+      <NewChallengeSheet ref={sheetRef} />
+      <AuthSheet ref={authSheetRef} />
+    </>
   );
 }
 
@@ -127,4 +130,3 @@ export default function TabsLayout() {
     </GestureHandlerRootView>
   );
 }
-

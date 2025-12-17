@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleProp, StyleSheet, TextStyle, View, ViewStyle } from "react-native";
+import { StyleProp, TextStyle, View, ViewStyle } from "react-native";
 import Animated, {
   Extrapolate,
   interpolate,
@@ -76,13 +76,15 @@ function CircularProgress(props: CircularProgressProps) {
   });
 
   // Style for the Label View
-  const labelViewContainerStyle: StyleProp<ViewStyle> = [
-    styles.labelView,
-    {
-      width: size,
-      height: size,
-    },
-  ];
+  const labelViewContainerStyle: StyleProp<ViewStyle> = {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    width: size,
+    height: size,
+  };
 
   // const style for the label text
   const labelTextStyles: StyleProp<TextStyle> = [
@@ -126,14 +128,3 @@ function CircularProgress(props: CircularProgressProps) {
 
 // exports
 export default CircularProgress;
-
-// styles
-const styles = StyleSheet.create({
-  labelView: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});

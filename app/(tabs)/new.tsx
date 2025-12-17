@@ -78,7 +78,6 @@ export default function NewChallengeScreen() {
         setLoadingCategories(false);
       }
     };
-
     fetchCategories();
   }, []);
 

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 export default function EditScreenInfo({ path }: { path: string }) {
   const title = 'Open up the code for this screen:';
@@ -6,42 +6,12 @@ export default function EditScreenInfo({ path }: { path: string }) {
     'Change any of the text, save the file, and your app will automatically update.';
 
   return (
-    <View style={styles.getStartedContainer}>
-      <Text style={styles.getStartedText}>{title}</Text>
-      <View style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
+    <View className="items-center mx-12">
+      <Text className="text-[17px] leading-6 text-center">{title}</Text>
+      <View className="rounded-sm px-1 my-2">
         <Text>{path}</Text>
       </View>
-      <Text style={styles.getStartedText}>{description}</Text>
+      <Text className="text-[17px] leading-6 text-center">{description}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  codeHighlightContainer: {
-    borderRadius: 3,
-    paddingHorizontal: 4,
-  },
-  getStartedContainer: {
-    alignItems: 'center',
-    marginHorizontal: 50,
-  },
-  getStartedText: {
-    fontSize: 17,
-    lineHeight: 24,
-    textAlign: 'center',
-  },
-  helpContainer: {
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginTop: 15,
-  },
-  helpLink: {
-    paddingVertical: 15,
-  },
-  helpLinkText: {
-    textAlign: 'center',
-  },
-  homeScreenFilename: {
-    marginVertical: 7,
-  },
-});

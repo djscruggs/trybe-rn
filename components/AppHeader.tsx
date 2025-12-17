@@ -1,7 +1,7 @@
 import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import UserAvatar from 'react-native-user-avatar';
 
@@ -19,13 +19,13 @@ export function AppHeader() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
-      <View style={styles.rightSection}>
-        <TouchableOpacity onPress={handleNotificationsPress} style={styles.iconButton}>
+    <View className="flex-row items-center justify-end px-4 pb-2 bg-white border-b border-gray-200" style={{ paddingTop: insets.top + 8 }}>
+      <View className="flex-row items-center gap-3">
+        <TouchableOpacity onPress={handleNotificationsPress} className="p-1">
           <Ionicons name="notifications-outline" size={24} color="#000" />
         </TouchableOpacity>
         {user && (
-          <TouchableOpacity onPress={handleProfilePress} style={styles.avatarButton}>
+          <TouchableOpacity onPress={handleProfilePress} className="p-0">
             <UserAvatar
               size={32}
               name={user?.fullName || user?.firstName || 'U'}
@@ -37,27 +37,3 @@ export function AppHeader() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  iconButton: {
-    padding: 4,
-  },
-  avatarButton: {
-    padding: 0,
-  },
-});

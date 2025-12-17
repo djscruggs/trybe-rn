@@ -1,7 +1,3 @@
-import axios from 'axios';
-import { router } from 'expo-router';
-import React, { useState, useEffect, useMemo, forwardRef } from 'react';
-import { View, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetScrollView,
@@ -9,6 +5,10 @@ import {
   BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import axios from 'axios';
+import { router } from 'expo-router';
+import React, { useState, useEffect, useMemo, forwardRef } from 'react';
+import { View, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 import { DatePicker } from '~/components/nativewindui/DatePicker/DatePicker';
@@ -84,7 +84,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
         setLoadingCategories(false);
       }
     };
-
+    console.log(`fetching ${API_HOST}/api/categories`);
     fetchCategories();
   }, []);
 
@@ -286,7 +286,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
               placeholder="Give your challenge a catchy name"
               className="h-12 rounded-lg border border-gray-300 px-4"
             />
-            {errors.name && <Text className="mt-1 text-sm text-red-500">{errors.name}</Text>}
+            {errors.name && <Text className="text-red-500 mt-1 text-sm">{errors.name}</Text>}
           </View>
 
           {/* Description */}
@@ -302,7 +302,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
               className="rounded-lg border border-gray-300 p-4"
             />
             {errors.description && (
-              <Text className="mt-1 text-sm text-red-500">{errors.description}</Text>
+              <Text className="text-red-500 mt-1 text-sm">{errors.description}</Text>
             )}
           </View>
 
@@ -317,9 +317,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
                     <TouchableOpacity
                       key={category.id}
                       onPress={() => toggleCategory(category)}
-                      className={`rounded-full px-4 py-2 ${
-                        isSelected ? 'bg-red' : 'bg-gray-200'
-                      }`}>
+                      className={`rounded-full px-4 py-2 ${isSelected ? 'bg-red' : 'bg-gray-200'}`}>
                       <Text className={isSelected ? 'text-white' : 'text-gray-700'}>
                         {category.name}
                       </Text>
@@ -333,7 +331,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
               </View>
             )}
             {errors.categories && (
-              <Text className="mt-1 text-sm text-red-500">{errors.categories}</Text>
+              <Text className="text-red-500 mt-1 text-sm">{errors.categories}</Text>
             )}
           </View>
 
@@ -401,7 +399,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
                 className="h-12 rounded-lg border border-gray-300 px-4"
               />
               {errors.numDays && (
-                <Text className="mt-1 text-sm text-red-500">{errors.numDays}</Text>
+                <Text className="text-red-500 mt-1 text-sm">{errors.numDays}</Text>
               )}
             </View>
           ) : (
@@ -423,7 +421,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
                   minimumDate={new Date()}
                 />
                 {errors.startAt && (
-                  <Text className="mt-1 text-sm text-red-500">{errors.startAt}</Text>
+                  <Text className="text-red-500 mt-1 text-sm">{errors.startAt}</Text>
                 )}
               </View>
 
@@ -439,7 +437,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
                       : new Date()
                   }
                 />
-                {errors.endAt && <Text className="mt-1 text-sm text-red-500">{errors.endAt}</Text>}
+                {errors.endAt && <Text className="text-red-500 mt-1 text-sm">{errors.endAt}</Text>}
               </View>
             </>
           )}
@@ -545,7 +543,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
                 </TouchableOpacity>
               ))}
             </View>
-            {errors.icon && <Text className="mt-1 text-sm text-red-500">{errors.icon}</Text>}
+            {errors.icon && <Text className="text-red-500 mt-1 text-sm">{errors.icon}</Text>}
           </View>
 
           {/* Submit Buttons */}
