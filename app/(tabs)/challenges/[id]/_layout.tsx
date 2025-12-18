@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, Slot, Link, usePathname } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Text, View, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
+import { CheckInModal } from '~/components/CheckInModal';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { MemberContextProvider, useMemberContext } from '~/contexts/member-context';
 import { challengesApi } from '~/lib/api/challengesApi';
@@ -114,11 +116,23 @@ const ChallengeDetailNavigation = ({ challenge }: { challenge: Challenge }) => {
 };
 
 const CheckInButton = () => {
-  const { membership } = useMemberContext();
-  if (!membership) return null;
+  const { membership, challenge } = useMemberContext();
+  const checkInModalRef = useRef<BottomSheetModal>(null);
+
+  if (!membership || !challenge) return null;
+
+  const handleCheckInComplete = () => {
+    // Optionally refresh data or update state
+  };
+
   return (
-    <TouchableOpacity className="rounded-full bg-red p-1 px-2">
-      <Text className="text-xs font-bold text-white">Check In</Text>
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        onPress={() => checkInModalRef.current?.present()}
+        className="rounded-full bg-red p-1 px-2">
+        <Text className="text-xs font-bold text-white">Check In</Text>
+      </TouchableOpacity>
+      <CheckInModal ref={checkInModalRef} onCheckInComplete={handleCheckInComplete} />
+    </>
   );
 };
