@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import UserAvatar from 'react-native-user-avatar';
+import UserAvatar from '~/components/UserAvatar';
 
 import { SignOutButton } from '~/components/SignOutButton';
 import { Text } from '~/components/nativewindui/Text';

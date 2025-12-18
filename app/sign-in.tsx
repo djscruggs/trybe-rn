@@ -46,7 +46,14 @@ export default function SignInPage() {
         console.error(JSON.stringify(completeSignIn, null, 2));
       }
     } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
+      // Handle session already exists - user is already signed in, just redirect
+      if (err?.errors?.[0]?.code === 'session_exists') {
+        console.log('Session already exists, redirecting to home');
+        router.replace('/');
+        return;
+      }
+      // Log other errors for debugging
+      console.error('Sign in error:', JSON.stringify(err, null, 2));
     }
   };
 

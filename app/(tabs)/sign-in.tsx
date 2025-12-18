@@ -12,11 +12,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 
 import { SocialAuthButtons } from '~/components/SocialAuthButtons';
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
+import { API_HOST } from '~/lib/environment';
 import { useSocialAuth } from '~/lib/useSocialAuth';
 import { useWarmUpBrowser } from '~/lib/useWarmUpBrowser';
 
@@ -47,6 +49,7 @@ export default function SignInPage() {
     if (!isLoaded) return;
 
     try {
+      // First, try Clerk authentication (user must exist in Clerk)
       const completeSignIn = await signIn!.create({
         identifier: emailAddress,
         password,
@@ -55,11 +58,51 @@ export default function SignInPage() {
       if (completeSignIn.status === 'complete') {
         await setActive!({ session: completeSignIn.createdSessionId });
         router.replace('/');
+        return;
       } else {
         console.error('Sign in incomplete:', JSON.stringify(completeSignIn, null, 2));
+        Alert.alert('Sign In Failed', 'Unable to sign in. Please check your credentials.');
       }
     } catch (err: any) {
+      // Handle session already exists - user is already signed in, just redirect
+      if (err?.errors?.[0]?.code === 'session_exists') {
+        console.log('Session already exists, redirecting to home');
+        router.replace('/');
+        return;
+      }
+      
+      // If user not found in Clerk (form_identifier_not_found), try database login
+      if (err?.errors?.[0]?.code === 'form_identifier_not_found') {
+        console.log('User not found in Clerk, trying database login...');
+        try {
+          const formData = new FormData();
+          formData.append('email', emailAddress);
+          formData.append('password', password);
+
+          const response = await fetch(`${API_HOST}/mobile/login`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          });
+
+          if (response.ok || response.status === 200 || response.redirected) {
+            console.log('Database login successful');
+            router.replace('/');
+            return;
+          } else {
+            Alert.alert('Sign In Failed', 'Invalid email or password');
+            return;
+          }
+        } catch (dbErr) {
+          console.error('Database login error:', dbErr);
+          Alert.alert('Sign In Failed', 'Unable to sign in. Please check your credentials.');
+          return;
+        }
+      }
+      
+      // Log other errors for debugging
       console.error('Sign in error:', JSON.stringify(err, null, 2));
+      Alert.alert('Sign In Error', err?.message || 'An error occurred during sign in');
     }
   };
 

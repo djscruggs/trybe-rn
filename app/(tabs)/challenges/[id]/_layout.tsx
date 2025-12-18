@@ -13,7 +13,7 @@ import { Challenge, MemberChallenge } from '~/lib/types';
 export default function ChallengeLayout() {
   const [membership, setMembership] = useState<MemberChallenge | null>(null);
   const { id } = useLocalSearchParams();
-  const { getToken } = useCurrentUser();
+  const { currentUser } = useCurrentUser();
 
   // Fetch challenge data using TanStack Query
   const {
@@ -28,19 +28,28 @@ export default function ChallengeLayout() {
 
   // Fetch membership data
   const loadMembership = async () => {
-    const token = await getToken();
-
-    if (!challenge || !token) {
+    if (!challenge || !currentUser?.id) {
       setMembership(null);
       return;
     }
-    const membershipData = await challengesApi.getMembership(id as string, token);
-    setMembership(membershipData);
+    try {
+      const membershipData = await challengesApi.getMembership(id as string, currentUser.id);
+      console.log('DEBUG: Loaded membership from API:', membershipData);
+      setMembership(membershipData);
+    } catch (error) {
+      console.error('DEBUG: Error loading membership:', error);
+      setMembership(null);
+    }
   };
 
   useEffect(() => {
     loadMembership();
-  }, [challenge]);
+  }, [challenge, currentUser?.id]);
+  
+  // Log membership state changes
+  useEffect(() => {
+    console.log('DEBUG: Membership state changed in layout:', membership ? { id: membership.id, challengeId: membership.challengeId } : null);
+  }, [membership]);
   if (error) return <Text className="text-red-500">Error loading challenge details</Text>;
 
   return (

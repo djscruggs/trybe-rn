@@ -44,7 +44,7 @@ const AVAILABLE_ICONS = Object.keys(iconMap) as (keyof typeof iconMap)[];
 export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
   const { closeSheet } = useNewChallengeSheet();
   const queryClient = useQueryClient();
-  const { getToken } = useCurrentUser();
+  const { currentUser } = useCurrentUser();
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   // Fetch categories using TanStack Query
@@ -82,9 +82,8 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
   // Create challenge mutation
   const createChallengeMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const token = await getToken();
-      if (!token) throw new Error('Not authenticated');
-      return challengesApi.create(data, token);
+      if (!currentUser?.id) throw new Error('Not authenticated');
+      return challengesApi.create(data, currentUser.id);
     },
     onSuccess: () => {
       // Invalidate challenges cache to refetch

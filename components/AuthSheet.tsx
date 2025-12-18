@@ -175,6 +175,16 @@ export const AuthSheet = forwardRef<BottomSheetModal>((props, ref) => {
         console.error('Sign in incomplete:', JSON.stringify(completeSignIn, null, 2));
       }
     } catch (err: any) {
+      // Handle session already exists - user is already signed in, just redirect
+      if (err?.errors?.[0]?.code === 'session_exists') {
+        console.log('Session already exists, redirecting to home');
+        closeSheet();
+        setTimeout(() => {
+          router.replace('/');
+        }, 300);
+        return;
+      }
+      // Log other errors for debugging
       console.error('Sign in error:', JSON.stringify(err, null, 2));
     }
   };

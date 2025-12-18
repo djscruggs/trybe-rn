@@ -1,7 +1,7 @@
 import { SignOutButton } from '~/components/SignOutButton';
 import { useEffect, useState } from 'react';
 import { View, SafeAreaView, ViewStyle, ScrollView, Button   } from 'react-native';
-import UserAvatar from 'react-native-user-avatar';
+import UserAvatar from '~/components/UserAvatar';
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { router } from 'expo-router';

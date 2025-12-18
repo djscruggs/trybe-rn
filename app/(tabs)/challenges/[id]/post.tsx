@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useLocalSearchParams, router } from 'expo-router';
 import React from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
-import UserAvatar from 'react-native-user-avatar';
+import UserAvatar from '~/components/UserAvatar';
 
 import LinkRenderer from '~/components/LinkRenderer';
 import { useMemberContext } from '~/contexts/member-context';
