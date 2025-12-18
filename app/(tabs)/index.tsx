@@ -1,28 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { Stack, useRouter } from 'expo-router';
 import { View, SafeAreaView, ViewStyle, ScrollView, Image, TouchableOpacity } from 'react-native';
 
 import { ChallengeListItem } from '~/components/ChallengeListItem';
 import { Text } from '~/components/nativewindui/Text';
-import { API_HOST } from '~/lib/environment';
+import { challengesApi } from '~/lib/api/challengesApi';
+import { queryKeys } from '~/lib/api/queryKeys';
 import { useColorScheme } from '~/lib/useColorScheme';
 const ROOT_STYLE: ViewStyle = { flex: 1 };
-async function fetchChallenges() {
-  const result = await axios.get(`${API_HOST}/api/challenges/active`);
-  return result.data;
-}
 
 export default function Home() {
   const { data, error, isLoading } = useQuery({
-    queryKey: ['challenges'],
-    queryFn: fetchChallenges,
+    queryKey: queryKeys.challenges.active(),
+    queryFn: challengesApi.getActive,
   });
 
   const router = useRouter();
 
   // Ensure data is an array before mapping
-  const challenges = Array.isArray(data?.challenges) ? data.challenges : [];
+  const challenges = Array.isArray(data) ? data : [];
   console.log('🎯 Home: Challenges count:', challenges.length);
 
   return (

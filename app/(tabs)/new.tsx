@@ -1,6 +1,6 @@
-import axios from 'axios';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
@@ -18,7 +18,9 @@ import { DatePicker } from '~/components/nativewindui/DatePicker/DatePicker';
 import { Picker, PickerItem } from '~/components/nativewindui/Picker';
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
-import { API_HOST } from '~/lib/environment';
+import { categoriesApi } from '~/lib/api/categoriesApi';
+import { challengesApi } from '~/lib/api/challengesApi';
+import { queryKeys } from '~/lib/api/queryKeys';
 import { iconMap } from '~/lib/helpers';
 import type { Category, ChallengeInputs, ChallengeType, ChallengeStatus } from '~/lib/types';
 
@@ -43,10 +45,24 @@ const COLORS = ['red', 'orange', 'salmon', 'yellow', 'green', 'blue', 'purple'] 
 const AVAILABLE_ICONS = Object.keys(iconMap) as (keyof typeof iconMap)[];
 
 export default function NewChallengeScreen() {
-  const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  const queryClient = useQueryClient();
+  const { getToken } = useCurrentUser();
   const [errors, setErrors] = useState<ValidationErrors>({});
+
+  // Fetch categories using TanStack Query
+  const {
+    data: categories = [],
+    isLoading: loadingCategories,
+    error: categoriesError,
+  } = useQuery({
+    queryKey: queryKeys.categories.all,
+    queryFn: categoriesApi.getAll,
+  });
+
+  // Show error alert for categories loading failure
+  if (categoriesError) {
+    Alert.alert('Error', 'Failed to load categories');
+  }
 
   // Form state
   const [formData, setFormData] = useState<Partial<ChallengeInputs>>({
@@ -65,21 +81,28 @@ export default function NewChallengeScreen() {
     deleteImage: false,
   });
 
-  // Load categories from API
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(`${API_HOST}/api/categories`);
-        setCategories(response.data.categories || []);
-      } catch (error) {
-        console.error('Error loading categories:', error);
-        Alert.alert('Error', 'Failed to load categories');
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-    fetchCategories();
-  }, []);
+  // Create challenge mutation
+  const createChallengeMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      const token = await getToken();
+      if (!token) throw new Error('Not authenticated');
+      return challengesApi.create(data, token);
+    },
+    onSuccess: () => {
+      // Invalidate challenges cache to refetch
+      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+      Alert.alert('Success', 'Challenge created successfully!', [
+        {
+          text: 'OK',
+          onPress: () => router.push('/'),
+        },
+      ]);
+    },
+    onError: (error: any) => {
+      console.error('Error creating challenge:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to create challenge');
+    },
+  });
 
   // Update form field
   const updateField = (field: keyof ChallengeInputs, value: any) => {
@@ -151,66 +174,41 @@ export default function NewChallengeScreen() {
       return;
     }
 
-    setLoading(true);
+    // Prepare form data for submission
+    const submitData = new FormData();
 
-    try {
-      // Prepare form data for submission
-      const submitData = new FormData();
+    // Add all text fields
+    if (formData.name) submitData.append('name', formData.name);
+    if (formData.description) submitData.append('description', formData.description);
+    if (formData.icon) submitData.append('icon', formData.icon);
+    if (formData.color) submitData.append('color', formData.color);
+    if (formData.type) submitData.append('type', formData.type);
+    if (formData.frequency) submitData.append('frequency', formData.frequency);
+    if (formData.status) submitData.append('status', formData.status);
 
-      // Add all text fields
-      if (formData.name) submitData.append('name', formData.name);
-      if (formData.description) submitData.append('description', formData.description);
-      if (formData.icon) submitData.append('icon', formData.icon);
-      if (formData.color) submitData.append('color', formData.color);
-      if (formData.type) submitData.append('type', formData.type);
-      if (formData.frequency) submitData.append('frequency', formData.frequency);
-      if (formData.status) submitData.append('status', formData.status);
+    submitData.append('public', String(formData.public));
 
-      submitData.append('public', String(formData.public));
-
-      // Add categories as JSON
-      if (formData.categories) {
-        submitData.append('categories', JSON.stringify(formData.categories.map((c) => c.id)));
-      }
-
-      // Add type-specific fields
-      if (formData.type === 'SCHEDULED') {
-        if (formData.startAt) {
-          submitData.append('startAt', formData.startAt.toISOString());
-        }
-        if (formData.endAt) {
-          submitData.append('endAt', formData.endAt.toISOString());
-        }
-      } else {
-        if (formData.numDays) {
-          submitData.append('numDays', String(formData.numDays));
-        }
-      }
-
-      // Submit to API
-      const response = await axios.post(`${API_HOST}/api/challenges`, submitData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (response.data.errors) {
-        setErrors(response.data.errors);
-        Alert.alert('Error', 'Please fix the errors and try again');
-      } else {
-        Alert.alert('Success', 'Challenge created successfully!', [
-          {
-            text: 'OK',
-            onPress: () => router.push('/'),
-          },
-        ]);
-      }
-    } catch (error: any) {
-      console.error('Error creating challenge:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to create challenge');
-    } finally {
-      setLoading(false);
+    // Add categories as JSON
+    if (formData.categories) {
+      submitData.append('categories', JSON.stringify(formData.categories.map((c) => c.id)));
     }
+
+    // Add type-specific fields
+    if (formData.type === 'SCHEDULED') {
+      if (formData.startAt) {
+        submitData.append('startAt', formData.startAt.toISOString());
+      }
+      if (formData.endAt) {
+        submitData.append('endAt', formData.endAt.toISOString());
+      }
+    } else {
+      if (formData.numDays) {
+        submitData.append('numDays', String(formData.numDays));
+      }
+    }
+
+    // Submit using mutation
+    createChallengeMutation.mutate(submitData);
   };
 
   if (loadingCategories) {
@@ -515,15 +513,15 @@ export default function NewChallengeScreen() {
             <View className="mb-8 flex-row gap-4">
               <TouchableOpacity
                 onPress={() => router.back()}
-                disabled={loading}
+                disabled={createChallengeMutation.isPending}
                 className="flex-1 rounded-lg border-2 border-gray-300 p-2">
                 <Text className="text-center font-semibold text-gray-700">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSubmit}
-                disabled={loading}
+                disabled={createChallengeMutation.isPending}
                 className="flex-1 rounded-lg border bg-red p-2">
-                {loading ? (
+                {createChallengeMutation.isPending ? (
                   <ActivityIndicator color="white" />
                 ) : (
                   <Text className="text-center font-semibold text-white">Create Challenge</Text>

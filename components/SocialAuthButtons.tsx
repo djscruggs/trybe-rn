@@ -10,7 +10,7 @@ interface SocialAuthButtonsProps {
 
 export function SocialAuthButtons({ onSocialSignIn }: SocialAuthButtonsProps) {
   return (
-    <View className="mb-6 flex-row justify-center gap-4">
+    <View className="mb-6 flex-row items-center justify-center gap-4">
       <SocialIcon
         type="google"
         iconType="font-awesome"

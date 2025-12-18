@@ -1,24 +1,14 @@
-import { useSignUp, useSSO } from '@clerk/clerk-expo';
+import { useSignUp } from '@clerk/clerk-expo';
 import { SocialIcon, SocialIconProps } from '@rneui/themed';
-import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Button, TextInput, TouchableOpacity } from 'react-native';
 
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
-export const useWarmUpBrowser = () => {
-  useEffect(() => {
-    // Preloads the browser for Android devices to reduce authentication load time
-    // See: https://docs.expo.dev/guides/authentication/#improving-user-experience
-    void WebBrowser.warmUpAsync();
-    return () => {
-      // Cleanup: closes browser when component unmounts
-      void WebBrowser.coolDownAsync();
-    };
-  }, []);
-};
+import { useSocialAuth } from '~/lib/useSocialAuth';
+import { useWarmUpBrowser } from '~/lib/useWarmUpBrowser';
 
 // Handle any pending authentication sessions
 WebBrowser.maybeCompleteAuthSession();
@@ -27,11 +17,11 @@ export default function SignUpPage() {
   useWarmUpBrowser();
   const { currentUser } = useCurrentUser();
   const { isLoaded, signUp, setActive } = useSignUp();
-  const { startSSOFlow } = useSSO();
-  const [emailAddress, setEmailAddress] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [pendingVerification, setPendingVerification] = React.useState(false);
-  const [code, setCode] = React.useState('');
+  const { onSocialSignIn } = useSocialAuth();
+  const [emailAddress, setEmailAddress] = useState('');
+  const [password, setPassword] = useState('');
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [code, setCode] = useState('');
 
   if (currentUser) {
     router.push('/');
@@ -74,26 +64,6 @@ export default function SignUpPage() {
       console.error(JSON.stringify(err, null, 2));
     }
   };
-
-  // Handle OAuth Sign Up
-  const onSocialSignIn = useCallback(
-    async (strategy: 'oauth_google' | 'oauth_linkedin_oidc' | 'oauth_slack') => {
-      try {
-        const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
-          strategy,
-          redirectUrl: AuthSession.makeRedirectUri(),
-        });
-
-        if (createdSessionId) {
-          setSSOActive!({ session: createdSessionId });
-          router.push('/');
-        }
-      } catch (err) {
-        console.error(JSON.stringify(err, null, 2));
-      }
-    },
-    [startSSOFlow]
-  );
 
   return (
     <View className="flex-1 items-center justify-center bg-white px-5">

@@ -1,18 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { useLocalSearchParams, Slot, Link, usePathname } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Text, View, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { MemberContextProvider, useMemberContext } from '~/contexts/member-context';
-import { API_HOST } from '~/lib/environment';
+import { challengesApi } from '~/lib/api/challengesApi';
+import { queryKeys } from '~/lib/api/queryKeys';
 import { iconMap } from '~/lib/helpers';
 import { Challenge, MemberChallenge } from '~/lib/types';
 
 export default function ChallengeLayout() {
   const [membership, setMembership] = useState<MemberChallenge | null>(null);
   const { id } = useLocalSearchParams();
+  const { getToken } = useCurrentUser();
 
   // Fetch challenge data using TanStack Query
   const {
@@ -20,16 +21,12 @@ export default function ChallengeLayout() {
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['challenge', id],
-    queryFn: async () => {
-      const url = `${API_HOST}/api/challenges/v/${id}`;
-      const response = await axios.get(url);
-      return response.data;
-    },
+    queryKey: queryKeys.challenges.detail(id as string),
+    queryFn: () => challengesApi.get(id as string),
     staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
   });
-  const { getToken } = useCurrentUser();
 
+  // Fetch membership data
   const loadMembership = async () => {
     const token = await getToken();
 
@@ -37,13 +34,10 @@ export default function ChallengeLayout() {
       setMembership(null);
       return;
     }
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
-    const url = `${API_HOST}/api/challenges/v/${id}/membership`;
-    const response = await axios.get(url, { headers });
-    setMembership(response.data.membership);
+    const membershipData = await challengesApi.getMembership(id as string, token);
+    setMembership(membershipData);
   };
+
   useEffect(() => {
     loadMembership();
   }, [challenge]);

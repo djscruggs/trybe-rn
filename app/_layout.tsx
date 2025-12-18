@@ -28,13 +28,11 @@ export default function RootLayout() {
         <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
           <UserProvider>
             <ClerkLoaded>
-              <Stack>
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{ headerShown: false }}
-                />
-                <Slot />
-              </Stack>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              />
             </ClerkLoaded>
             <Toast />
           </UserProvider>

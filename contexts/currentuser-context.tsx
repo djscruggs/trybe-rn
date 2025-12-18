@@ -1,10 +1,10 @@
 import { useAuth } from '@clerk/clerk-expo';
-import { createContext, ReactNode, useContext, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { createContext, ReactNode, useContext, useState, useEffect } from 'react';
 
-import { type CurrentUser } from '~/lib/types';
 import { API_HOST } from '~/lib/environment';
+import { type CurrentUser } from '~/lib/types';
 
 export interface CurrentUserContextType {
   currentUser: CurrentUser | null;
@@ -27,7 +27,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   // Auto-fetch user data when userId is available
-  const { data: userData, isLoading, error } = useQuery({
+  const {
+    data: userData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['user', userId],
     queryFn: async () => {
       console.log('🌐 UserProvider: Fetching user data for userId:', userId);

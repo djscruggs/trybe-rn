@@ -200,7 +200,6 @@ interface LinksToFormat {
   keyPrefix: string;
 }
 export function formatLinks(props: LinksToFormat): JSX.Element[] {
-  console.log('formatLinks', props);
   const { links, keyPrefix } = props;
   if (!links || links.length === 0) return [];
   return links
@@ -257,7 +256,6 @@ export function resizeImageToFit(width: number, height: number, maxSize: number 
 export function textToJSX(text: string | undefined, textOnly = false): React.ReactNode {
   if (!text) return null;
   const { text: textWithoutLinks, links } = separateTextAndLinks(text) ?? {};
-  console.log('links', links);
   // remove youtube links
   const strippedLinks = links?.map((link) => {
     return link.replace(youtubeRegex, '');

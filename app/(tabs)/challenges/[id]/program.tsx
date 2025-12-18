@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Text, View, ScrollView } from 'react-native';
 
 import ChallengeSchedule from '~/components/ChallengeSchedule';
 import { useMemberContext } from '~/contexts/member-context';
-import { API_HOST } from '~/lib/environment';
+import { challengesApi } from '~/lib/api/challengesApi';
+import { queryKeys } from '~/lib/api/queryKeys';
 import { Challenge } from '~/lib/types';
 
 export default function ChallengeProgram(): JSX.Element {
@@ -17,12 +17,8 @@ export default function ChallengeProgram(): JSX.Element {
     error: programError,
     isLoading: isProgramLoading,
   } = useQuery({
-    queryKey: ['challengeProgram', id],
-    queryFn: async () => {
-      const url = `${API_HOST}/api/challenges/v/${id}/program`;
-      const response = await axios.get(url);
-      return response.data;
-    },
+    queryKey: queryKeys.challenges.program(id as string),
+    queryFn: () => challengesApi.getProgram(id as string),
     staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
   });
 

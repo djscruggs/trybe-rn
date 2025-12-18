@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { Link, useLocalSearchParams, router } from 'expo-router';
 import React from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
@@ -7,7 +6,8 @@ import UserAvatar from 'react-native-user-avatar';
 
 import LinkRenderer from '~/components/LinkRenderer';
 import { useMemberContext } from '~/contexts/member-context';
-import { API_HOST } from '~/lib/environment';
+import { challengesApi } from '~/lib/api/challengesApi';
+import { queryKeys } from '~/lib/api/queryKeys';
 import { textToJSX } from '~/lib/helpers';
 
 export default function PostDetail() {
@@ -18,12 +18,8 @@ export default function PostDetail() {
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['challenge', postId],
-    queryFn: async () => {
-      const url = `${API_HOST}/api/posts/v/${postId}`;
-      const response = await axios.get(url);
-      return response.data;
-    },
+    queryKey: queryKeys.posts.detail(postId as string),
+    queryFn: () => challengesApi.getPost(postId as string),
     staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
   });
 

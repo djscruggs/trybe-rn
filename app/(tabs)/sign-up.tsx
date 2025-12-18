@@ -1,8 +1,7 @@
-import { useAuth, useSignUp, useSSO } from '@clerk/clerk-expo';
-import * as AuthSession from 'expo-auth-session';
+import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   SafeAreaView,
@@ -18,20 +17,10 @@ import {
 import { SocialAuthButtons } from '~/components/SocialAuthButtons';
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
+import { useSocialAuth } from '~/lib/useSocialAuth';
+import { useWarmUpBrowser } from '~/lib/useWarmUpBrowser';
 
 const ROOT_STYLE: ViewStyle = { flex: 1 };
-
-export const useWarmUpBrowser = () => {
-  useEffect(() => {
-    // Preloads the browser for Android devices to reduce authentication load time
-    // See: https://docs.expo.dev/guides/authentication/#improving-user-experience
-    void WebBrowser.warmUpAsync();
-    return () => {
-      // Cleanup: closes browser when component unmounts
-      void WebBrowser.coolDownAsync();
-    };
-  }, []);
-};
 
 // Handle any pending authentication sessions
 WebBrowser.maybeCompleteAuthSession();
@@ -41,7 +30,7 @@ export default function SignUpPage() {
   const { currentUser } = useCurrentUser();
   const { isSignedIn, isLoaded } = useAuth();
   const { signUp, setActive } = useSignUp();
-  const { startSSOFlow } = useSSO();
+  const { onSocialSignIn } = useSocialAuth();
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
@@ -125,34 +114,6 @@ export default function SignUpPage() {
       console.error('Verification error:', JSON.stringify(err, null, 2));
     }
   };
-
-  // Handle OAuth Sign Up
-  const onSocialSignIn = useCallback(
-    async (strategy: 'oauth_google' | 'oauth_linkedin_oidc' | 'oauth_slack') => {
-      try {
-        const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
-          strategy,
-          redirectUrl: AuthSession.makeRedirectUri(),
-        });
-
-        if (createdSessionId) {
-          setSSOActive!({ session: createdSessionId });
-          router.replace('/');
-        } else {
-          console.log('Additional steps required for authentication');
-        }
-      } catch (err: any) {
-        // Handle session already exists error
-        if (err?.errors?.[0]?.code === 'session_exists') {
-          console.log('Session already exists, redirecting to home');
-          router.replace('/');
-          return;
-        }
-        console.error('OAuth error:', JSON.stringify(err, null, 2));
-      }
-    },
-    [startSSOFlow]
-  );
 
   // Show loading while checking auth state or if already signed in
   if (!isLoaded || isSignedIn) {
