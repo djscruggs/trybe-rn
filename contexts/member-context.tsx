@@ -40,7 +40,7 @@ export const MemberContextProvider = ({
   setMembership,
   challenge,
 }: MemberContextProviderProps): JSX.Element => {
-  const { currentUser } = useCurrentUser();
+  const { currentUser, getToken } = useCurrentUser();
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [loading, setLoading] = useState(false);
   const [updated, setUpdated] = useState(false);
@@ -60,7 +60,16 @@ export const MemberContextProvider = ({
       if (membership?.challenge.type === 'SELF_LED' && membership?.cohortId) {
         url += `/${membership.cohortId}`;
       }
-      const response = await axios.get(url);
+      
+      const token = await getToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      } else if (currentUser?.id) {
+        headers.Authorization = `Bearer ${currentUser.id}`;
+      }
+      
+      const response = await axios.get(url, { headers });
       setCheckIns(response.data.checkIns as CheckIn[]);
       setUpdated(true);
     } catch (error) {

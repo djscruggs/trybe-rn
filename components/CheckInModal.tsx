@@ -5,6 +5,7 @@ import {
   BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { forwardRef, useMemo, useState } from 'react';
 import { View, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
@@ -13,6 +14,7 @@ import Toast from 'react-native-toast-message';
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { useMemberContext } from '~/contexts/member-context';
+import { queryKeys } from '~/lib/api/queryKeys';
 import { API_HOST } from '~/lib/environment';
 import type { CheckIn } from '~/lib/types';
 
@@ -24,6 +26,7 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
   ({ onCheckInComplete }, ref) => {
     const { currentUser } = useCurrentUser();
     const { challenge, membership } = useMemberContext();
+    const queryClient = useQueryClient();
     const [body, setBody] = useState('');
     const [image, setImage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,6 +114,22 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
 
         const responseData = await response.json();
 
+        // Invalidate queries to refetch updated data
+        if (challenge?.id && currentUser?.id) {
+          // Invalidate membership query
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.challenges.membership(challenge.id.toString()),
+          });
+
+          // Invalidate check-ins query to refresh progress chart
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.challenges.checkIns(
+              challenge.id.toString(),
+              currentUser.id.toString()
+            ),
+          });
+        }
+
         Toast.show({
           type: 'success',
           text1: '🎉 Great job!',
@@ -120,6 +139,7 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
         setBody('');
         setImage(null);
 
+        // Call callback to notify parent component
         if (onCheckInComplete && responseData.checkIn) {
           onCheckInComplete(responseData.checkIn);
         }

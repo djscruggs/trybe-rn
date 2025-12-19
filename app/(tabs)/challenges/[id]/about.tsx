@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import axios from 'axios';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
 import * as Notifications from 'expo-notifications';
@@ -24,6 +24,8 @@ import ErrorText from '~/components/ErrorText';
 import LinkRenderer from '~/components/LinkRenderer';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 import { useMemberContext } from '~/contexts/member-context';
+import { challengesApi } from '~/lib/api/challengesApi';
+import { queryKeys } from '~/lib/api/queryKeys';
 import { API_HOST } from '~/lib/environment';
 import { textToJSX, calculateDuration } from '~/lib/helpers';
 import { getShortUrl } from '~/lib/helpers/challenge';
@@ -31,12 +33,8 @@ import { getShortUrl } from '~/lib/helpers/challenge';
 export default function ChallengeAbout() {
   const { getToken, currentUser } = useCurrentUser();
   const { userId } = useAuth();
-  const { membership, challenge, setMembership } = useMemberContext();
-  
-  // Log membership changes for debugging
-  useEffect(() => {
-    console.log('DEBUG: Membership changed:', membership ? { id: membership.id, challengeId: membership.challengeId } : null);
-  }, [membership]);
+  const { membership, challenge } = useMemberContext();
+  const queryClient = useQueryClient();
   
   const handleCopy = () => {
     const url = getShortUrl(challenge, membership);
@@ -129,73 +127,71 @@ export default function ChallengeAbout() {
     }
   };
 
-  const handleLeaveChallenge = async () => {
-    setJoining(true);
+  // Mutation for leaving a challenge
+  const leaveChallengeMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentUser?.id || !challenge?.id) {
+        throw new Error('User not authenticated');
+      }
+      return challengesApi.joinOrLeave(challenge.id.toString(), {}, currentUser.id);
+    },
+    onSuccess: () => {
+      // Invalidate membership query to refetch
+      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.membership(challenge?.id?.toString() || '') });
+      setError('');
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || 'Failed to leave challenge';
+      setError(errorMessage);
+      Alert.alert('Error', errorMessage);
+    },
+  });
 
-    if (!currentUser?.id) {
-      setError('User not authenticated. Please sign in again.');
-      setJoining(false);
-      return;
-    }
-
-    const headers = {
-      Authorization: `Bearer ${currentUser.id}`,
-    };
-
-    axios
-      .post(`${API_HOST}/api/challenges/join-unjoin/${challenge?.id}`, {}, { headers })
-      .then((result) => {
-        console.log('DEBUG: Unjoin response:', JSON.stringify(result.data, null, 2));
-        // API returns { result: 'unjoined', data: ... }
-        setMembership(null);
-        setError('');
-      })
-      .catch((error) => {
-        console.error('DEBUG: Unjoin error:', error);
-        setError(error.response?.data?.message || 'Failed to leave challenge');
-      })
-      .finally(() => {
-        setJoining(false);
-      });
-  };
+  // Mutation for joining a challenge
+  const joinChallengeMutation = useMutation({
+    mutationFn: async (data: {
+      userId: string;
+      notificationHour: number;
+      notificationMinute: number;
+      startAt?: string;
+    }) => {
+      if (!currentUser?.id || !challenge?.id) {
+        throw new Error('User not authenticated');
+      }
+      return challengesApi.joinOrLeave(challenge.id.toString(), data, currentUser.id);
+    },
+    onSuccess: () => {
+      // Invalidate membership query to refetch
+      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.membership(challenge?.id?.toString() || '') });
+      setError('');
+    },
+    onError: (error: any) => {
+      let errorMessage = 'Failed to join challenge';
+      const responseData = error.response?.data;
+      const isHtml = typeof responseData === 'string' && responseData.trim().startsWith('<!');
+      if (isHtml) {
+        errorMessage = 'Authentication failed. The server may not recognize your session. For localhost development, you may need to forward Clerk webhooks using: npx @clerk/clerk-sdk-node localhost';
+      } else if (error.message === 'Network Error') {
+        errorMessage = `Network Error: Unable to reach server at ${API_HOST}. Please check your connection and ensure the server is running.`;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        errorMessage = 'Authentication failed. Please sign in again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      setError(errorMessage);
+      Alert.alert('Error', errorMessage);
+    },
+  });
 
   const handleNotificationConfirm = async (notificationTime: Date, startDate: Date) => {
-    setJoining(true);
     setShowTimeModal(false);
-    console.log('DEBUG: handleNotificationConfirm called');
-    console.log('DEBUG: submitted startDate', startDate.toISOString());
-    console.log('DEBUG: notificationTime', notificationTime.toISOString());
-    console.log('DEBUG: userId from Clerk', userId);
 
-    if (!userId) {
-      console.error('DEBUG: No Clerk userId available');
+    if (!userId || !currentUser?.id) {
       setError('User not authenticated. Please sign in again.');
-      setJoining(false);
       return;
     }
-
-    // Try to use currentUser.id if available
-    // If not available, we'll send the Clerk token instead
-    let authValue: string;
-    if (currentUser?.id) {
-      authValue = `Bearer ${currentUser.id}`;
-      console.log('DEBUG: Using database user ID for auth:', currentUser.id);
-    } else {
-      // Fallback: use Clerk token if user not found in database
-      const token = await getToken();
-      if (!token) {
-        console.error('DEBUG: No currentUser.id and no Clerk token available');
-        setError('User not authenticated. Please sign in again.');
-        setJoining(false);
-        return;
-      }
-      authValue = `Bearer ${token}`;
-      console.log('DEBUG: Using Clerk token for auth (user not in database yet)');
-    }
-
-    const headers = {
-      Authorization: authValue,
-    };
 
     const notificationHour = notificationTime.getHours();
     const notificationMinute = notificationTime.getMinutes();
@@ -245,99 +241,12 @@ export default function ChallengeAbout() {
       requestData.startAt = new Date(challenge.startAt).toISOString();
     }
 
-    const requestHeaders = {
-      ...headers,
-      'Content-Type': 'application/json',
-    };
-
-    console.log('DEBUG: API_HOST:', API_HOST);
-    console.log('DEBUG: Challenge ID:', challenge?.id);
-    console.log('DEBUG: Request URL:', `${API_HOST}/api/challenges/join-unjoin/${challenge?.id}`);
-    console.log('DEBUG: currentUser:', currentUser ? { id: currentUser.id, email: currentUser.email } : null);
-    console.log('DEBUG: currentUser.id type:', typeof currentUser?.id);
-    console.log('DEBUG: currentUser.id value:', currentUser?.id);
-    console.log('DEBUG: Authorization header value:', `Bearer ${currentUser.id}`);
-    console.log('DEBUG: Request headers:', requestHeaders);
-    console.log('DEBUG: Request data:', requestData);
-
-    axios
-      .post(`${API_HOST}/api/challenges/join-unjoin/${challenge?.id}`, requestData, { headers: requestHeaders })
-      .then((result) => {
-        console.log('DEBUG: API Success Response:', JSON.stringify(result.data, null, 2));
-        // API returns { result: 'joined', data: memberChallenge }
-        if (result.data.result === 'joined' && result.data.data) {
-          const newMembership = result.data.data;
-          console.log('DEBUG: Setting membership to:', newMembership);
-          console.log('DEBUG: Current membership before update:', membership);
-          console.log('DEBUG: isMember before update:', isMember);
-          
-          // Update membership state
-          setMembership(newMembership);
-          
-          // Verify the update after a brief delay
-          setTimeout(() => {
-            console.log('DEBUG: Membership after update should be:', newMembership);
-            console.log('DEBUG: isMember after update should be:', true);
-          }, 100);
-        } else if (result.data.result === 'unjoined') {
-          console.log('DEBUG: Unjoined, setting membership to null');
-          console.log('DEBUG: Current membership before update:', membership);
-          console.log('DEBUG: isMember before update:', isMember);
-          
-          setMembership(null);
-          
-          setTimeout(() => {
-            console.log('DEBUG: Membership after update should be: null');
-            console.log('DEBUG: isMember after update should be:', false);
-          }, 100);
-        }
+    setJoining(true);
+    joinChallengeMutation.mutate(requestData, {
+      onSettled: () => {
         setJoining(false);
-        setError('');
-      })
-      .catch((error) => {
-        console.error('DEBUG: API Error:', error);
-        console.error('DEBUG: Error Response:', error.response?.data);
-        console.error('DEBUG: Error Status:', error.response?.status);
-        console.error('DEBUG: Error Headers:', error.response?.headers);
-        console.error('DEBUG: Error Message:', error.message);
-        console.error('DEBUG: Error Code:', error.code);
-        console.error('DEBUG: Error Config:', {
-          url: error.config?.url,
-          method: error.config?.method,
-          baseURL: error.config?.baseURL,
-          headers: error.config?.headers,
-        });
-        
-        // Check if response is HTML (redirect/error page)
-        const responseData = error.response?.data;
-        const isHtml = typeof responseData === 'string' && responseData.trim().startsWith('<!');
-        if (isHtml) {
-          console.error('DEBUG: Server returned HTML instead of JSON. This usually means:');
-          console.error('1. Authentication failed - token not validated');
-          console.error('2. Server redirected to login page');
-          console.error('3. User might not exist in database (webhook not synced)');
-          console.error('HTML Response preview:', responseData.substring(0, 500));
-        }
-        
-        let errorMessage = 'Failed to join challenge';
-        if (isHtml) {
-          errorMessage = 'Authentication failed. The server may not recognize your session. For localhost development, you may need to forward Clerk webhooks using: npx @clerk/clerk-sdk-node localhost';
-        } else if (error.message === 'Network Error') {
-          errorMessage = `Network Error: Unable to reach server at ${API_HOST}. Please check your connection and ensure the server is running.`;
-        } else if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response?.status === 401 || error.response?.status === 403) {
-          errorMessage = 'Authentication failed. Please sign in again.';
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        Alert.alert('Error', errorMessage);
-        setError(errorMessage);
-      })
-      .finally(() => {
-        setJoining(false);
-      });
+      },
+    });
   };
 
   const handleTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {

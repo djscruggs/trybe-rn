@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, Slot, Link, usePathname } from 'expo-router';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Text, View, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
@@ -13,7 +13,6 @@ import { iconMap } from '~/lib/helpers';
 import { Challenge, MemberChallenge } from '~/lib/types';
 
 export default function ChallengeLayout() {
-  const [membership, setMembership] = useState<MemberChallenge | null>(null);
   const { id } = useLocalSearchParams();
   const { currentUser } = useCurrentUser();
 
@@ -28,36 +27,25 @@ export default function ChallengeLayout() {
     staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
   });
 
-  // Fetch membership data
-  const loadMembership = async () => {
-    if (!challenge || !currentUser?.id) {
-      setMembership(null);
-      return;
-    }
-    try {
-      const membershipData = await challengesApi.getMembership(id as string, currentUser.id);
-      console.log('DEBUG: Loaded membership from API:', membershipData);
-      setMembership(membershipData);
-    } catch (error) {
-      console.error('DEBUG: Error loading membership:', error);
-      setMembership(null);
-    }
-  };
-
-  useEffect(() => {
-    loadMembership();
-  }, [challenge, currentUser?.id]);
-  
-  // Log membership state changes
-  useEffect(() => {
-    console.log('DEBUG: Membership state changed in layout:', membership ? { id: membership.id, challengeId: membership.challengeId } : null);
-  }, [membership]);
+  // Fetch membership data using TanStack Query
+  const {
+    data: membership,
+    isLoading: isLoadingMembership,
+  } = useQuery({
+    queryKey: queryKeys.challenges.membership(id as string),
+    queryFn: () => {
+      if (!currentUser?.id) return null;
+      return challengesApi.getMembership(id as string, currentUser.id);
+    },
+    enabled: !!challenge && !!currentUser?.id,
+    staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
+  });
   if (error) return <Text className="text-red-500">Error loading challenge details</Text>;
 
   return (
     <MemberContextProvider
       membership={membership ?? null}
-      setMembership={setMembership}
+      setMembership={() => {}} // No-op, updates handled via query invalidation
       challenge={challenge}>
       {isLoading || error ? (
         <View className="flex-1 items-center justify-center">

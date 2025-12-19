@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { StyleProp, TextStyle, View, ViewStyle } from "react-native";
 import Animated, {
   Extrapolate,
@@ -24,6 +24,7 @@ export interface CircularProgressProps {
   labelColor?: string;
   labelStyle?: StyleProp<TextStyle>;
   labelSize?: number;
+  children?: ReactNode;
 }
 
 // function component for CircularProgress
@@ -35,6 +36,7 @@ function CircularProgress(props: CircularProgressProps) {
     progress = 0,
     showLabel = true,
     labelSize = (20 * size) / 100,
+    children,
     ...otherProps
   } = props;
 
@@ -94,35 +96,39 @@ function CircularProgress(props: CircularProgressProps) {
 
   // render
   return (
-    <Svg width={size} height={size}>
-      <Circle
-        stroke={outerCircleColor}
-        fill="none"
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        strokeWidth={strokeWidth}
-      />
+    <View style={{ width: size, height: size, position: 'relative' }}>
+      <Svg width={size} height={size}>
+        <Circle
+          stroke={outerCircleColor}
+          fill="none"
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={strokeWidth}
+        />
 
-      <AnimatedCircle
-        stroke={progressCircleColor}
-        fill="none"
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        strokeDasharray={`${circum} ${circum}`}
-        strokeLinecap="round"
-        transform={`rotate(-90, ${size / 2}, ${size / 2})`}
-        strokeWidth={strokeWidth}
-        animatedProps={circleAnimatedProps}
-      />
+        <AnimatedCircle
+          stroke={progressCircleColor}
+          fill="none"
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeDasharray={`${circum} ${circum}`}
+          strokeLinecap="round"
+          transform={`rotate(-90, ${size / 2}, ${size / 2})`}
+          strokeWidth={strokeWidth}
+          animatedProps={circleAnimatedProps}
+        />
+      </Svg>
 
-      {showLabel ? (
-        <View style={labelViewContainerStyle}>
+      <View style={labelViewContainerStyle}>
+        {children ? (
+          children
+        ) : showLabel ? (
           <Animated.Text style={labelTextStyles}>{`${LabelText}%`}</Animated.Text>
-        </View>
-      ) : null}
-    </Svg>
+        ) : null}
+      </View>
+    </View>
   );
 }
 

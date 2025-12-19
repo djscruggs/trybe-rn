@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { API_HOST } from '~/lib/environment';
-import type { Challenge, ChallengeInputs, MemberChallenge } from '~/lib/types';
+import type { Challenge, ChallengeInputs, CheckIn, MemberChallenge } from '~/lib/types';
 
 interface JoinChallengeParams {
   userId: string;
@@ -64,9 +64,26 @@ export const challengesApi = {
     return response.data;
   },
 
-  getCheckIns: async (challengeId: string, userId: string): Promise<any> => {
-    const response = await axios.get(`${API_HOST}/api/checkins/${challengeId}/${userId}`);
-    return response.data.checkIns;
+  getCheckIns: async (
+    challengeId: string,
+    userId: string,
+    token: string | null,
+    cohortId?: number | null
+  ): Promise<CheckIn[]> => {
+    let url = `${API_HOST}/api/checkins/${challengeId}/${userId}`;
+    if (cohortId) {
+      url += `/${cohortId}`;
+    }
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    } else if (userId) {
+      headers.Authorization = `Bearer ${userId}`;
+    }
+
+    const response = await axios.get(url, { headers });
+    return response.data.checkIns || [];
   },
 
   updateMembership: async (membershipId: string, data: any): Promise<any> => {
