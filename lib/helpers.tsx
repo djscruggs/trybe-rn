@@ -206,7 +206,7 @@ export function formatLinks(props: LinksToFormat): JSX.Element[] {
     .filter((link) => link && link.trim() !== '')
     .map((link, index) => (
       <TouchableOpacity key={`${keyPrefix}-${index}`} onPress={() => Linking.openURL(link)}>
-        <Text className="mt-4 text-blue">{link}</Text>
+        <Text className="mt-2 text-blue">{link}</Text>
       </TouchableOpacity>
     ));
 }
@@ -256,10 +256,8 @@ export function resizeImageToFit(width: number, height: number, maxSize: number 
 export function textToJSX(text: string | undefined, textOnly = false): React.ReactNode {
   if (!text) return null;
   const { text: textWithoutLinks, links } = separateTextAndLinks(text) ?? {};
-  // remove youtube links
-  const strippedLinks = links?.map((link) => {
-    return link.replace(youtubeRegex, '');
-  });
+  // filter out youtube links entirely
+  const strippedLinks = links?.filter((link) => !youtubeRegex.test(link)) ?? [];
   return (
     <View>
       {textWithoutLinks?.split('\n').map((line: string, index: number) => {
@@ -270,7 +268,7 @@ export function textToJSX(text: string | undefined, textOnly = false): React.Rea
           </React.Fragment>
         );
       })}
-      {!textOnly && formatLinks({ links: strippedLinks ?? [], keyPrefix: 'text-to-jsx' })}
+      {!textOnly && formatLinks({ links: strippedLinks, keyPrefix: 'text-to-jsx' })}
     </View>
   );
 }

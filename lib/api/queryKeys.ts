@@ -32,4 +32,11 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.users.all, id] as const,
     current: () => [...queryKeys.users.all, 'current'] as const,
   },
+
+  // Comments
+  comments: {
+    all: ['comments'] as const,
+    challenge: (challengeId: string, cohortId?: number) =>
+      [...queryKeys.comments.all, 'challenge', challengeId, cohortId || 'all'] as const,
+  },
 };

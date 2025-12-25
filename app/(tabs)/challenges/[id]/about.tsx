@@ -1,8 +1,8 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
 import * as Notifications from 'expo-notifications';
 import { DateTimeFormatOptions } from 'intl';
@@ -35,7 +35,7 @@ export default function ChallengeAbout() {
   const { userId } = useAuth();
   const { membership, challenge } = useMemberContext();
   const queryClient = useQueryClient();
-  
+
   const handleCopy = () => {
     const url = getShortUrl(challenge, membership);
     Share.open({
@@ -137,7 +137,9 @@ export default function ChallengeAbout() {
     },
     onSuccess: () => {
       // Invalidate membership query to refetch
-      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.membership(challenge?.id?.toString() || '') });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.challenges.membership(challenge?.id?.toString() || ''),
+      });
       setError('');
     },
     onError: (error: any) => {
@@ -162,7 +164,9 @@ export default function ChallengeAbout() {
     },
     onSuccess: () => {
       // Invalidate membership query to refetch
-      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.membership(challenge?.id?.toString() || '') });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.challenges.membership(challenge?.id?.toString() || ''),
+      });
       setError('');
     },
     onError: (error: any) => {
@@ -170,7 +174,8 @@ export default function ChallengeAbout() {
       const responseData = error.response?.data;
       const isHtml = typeof responseData === 'string' && responseData.trim().startsWith('<!');
       if (isHtml) {
-        errorMessage = 'Authentication failed. The server may not recognize your session. For localhost development, you may need to forward Clerk webhooks using: npx @clerk/clerk-sdk-node localhost';
+        errorMessage =
+          'Authentication failed. The server may not recognize your session. For localhost development, you may need to forward Clerk webhooks using: npx @clerk/clerk-sdk-node localhost';
       } else if (error.message === 'Network Error') {
         errorMessage = `Network Error: Unable to reach server at ${API_HOST}. Please check your connection and ensure the server is running.`;
       } else if (error.response?.data?.message) {
@@ -206,15 +211,15 @@ export default function ChallengeAbout() {
           {
             text: 'Open Settings',
             onPress: () => {
-              Linking.openSettings().catch(err => {
+              Linking.openSettings().catch((err) => {
                 console.error('Failed to open settings:', err);
                 Alert.alert(
                   'Unable to Open Settings',
                   'Please open your device Settings app manually and enable notifications for this app.'
                 );
               });
-            }
-          }
+            },
+          },
         ]
       );
       // Mark that we've prompted the user
@@ -276,11 +281,10 @@ export default function ChallengeAbout() {
     day: 'numeric',
   };
   const locale = Localization.getLocales()[0]?.languageTag;
-  const description = textToJSX(challenge?.description ?? '');
   return (
     <View className="bg-white p-2">
       {error && <ErrorText>{error}</ErrorText>}
-      {description}
+      {textToJSX(challenge?.description ?? '')}
       <LinkRenderer text={challenge?.description ?? ''} />
       {/* Program Details */}
       <View className="mb-6 mt-8">
@@ -339,13 +343,14 @@ export default function ChallengeAbout() {
         {/* Notification Reminder - Show conditionally */}
         {Platform.OS !== 'web' &&
           !notificationsEnabled &&
-          (isMember || (challenge?.userId === currentUser?.id && challenge?.status !== 'DRAFT')) && (
-            <View className="mb-4 rounded-lg bg-blue-50 p-4">
+          (isMember ||
+            (challenge?.userId === currentUser?.id && challenge?.status !== 'DRAFT')) && (
+            <View className="bg-blue-50 mb-4 rounded-lg p-4">
               <View className="mb-2 flex-row items-center">
                 <Feather name="bell" size={20} color="#3b82f6" />
-                <Text className="ml-2 font-semibold text-blue-900">Enable Notifications</Text>
+                <Text className="text-blue-900 ml-2 font-semibold">Enable Notifications</Text>
               </View>
-              <Text className="mb-3 text-sm text-blue-800">
+              <Text className="text-blue-800 mb-3 text-sm">
                 Get daily reminders for this challenge. Enable notifications in your device settings
                 to stay on track.
               </Text>
@@ -360,10 +365,8 @@ export default function ChallengeAbout() {
                     );
                   });
                 }}
-                className="rounded-md bg-blue-600 px-4 py-2">
-                <Text className="text-center text-sm font-semibold text-white">
-                  Open Settings
-                </Text>
+                className="bg-blue-600 rounded-md px-4 py-2">
+                <Text className="text-center text-sm font-semibold text-white">Open Settings</Text>
               </TouchableOpacity>
             </View>
           )}
