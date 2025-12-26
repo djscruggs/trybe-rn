@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useLocalSearchParams, Slot, Link, usePathname } from 'expo-router';
+import { useLocalSearchParams, Slot, Link, usePathname, useRouter } from 'expo-router';
 import React, { useRef } from 'react';
 import { Text, View, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -105,12 +105,14 @@ const ChallengeDetailNavigation = ({ challenge }: { challenge: Challenge }) => {
 
 const CheckInButton = () => {
   const { membership, challenge } = useMemberContext();
+  const router = useRouter();
   const checkInModalRef = useRef<BottomSheetModal>(null);
 
   if (!membership || !challenge) return null;
 
   const handleCheckInComplete = () => {
-    // Optionally refresh data or update state
+    // Redirect to Progress tab after successful check-in
+    router.push(`/challenges/${challenge.id}/progress`);
   };
 
   return (

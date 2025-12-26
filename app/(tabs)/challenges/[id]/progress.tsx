@@ -60,6 +60,15 @@ export default function ChallengeProgress() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#EF4444" />
+        <Text className="mt-4 text-gray-600">Loading progress...</Text>
+      </View>
+    );
+  }
+
   const sortedCheckIns = [...checkIns].sort((a, b) => {
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
@@ -75,11 +84,7 @@ export default function ChallengeProgress() {
 
       <View className="px-4 pb-8">
         <Text className="mb-4 text-xl font-bold text-gray-900">Check-ins</Text>
-        {isLoading ? (
-          <View className="py-8">
-            <ActivityIndicator size="small" color="#EF4444" />
-          </View>
-        ) : sortedCheckIns.length === 0 ? (
+        {sortedCheckIns.length === 0 ? (
           <View className="py-8">
             <Text className="text-center text-gray-500">No check-ins yet</Text>
           </View>
