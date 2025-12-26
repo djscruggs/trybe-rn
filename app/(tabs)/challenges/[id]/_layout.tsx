@@ -14,7 +14,7 @@ import { Challenge, MemberChallenge } from '~/lib/types';
 
 export default function ChallengeLayout() {
   const { id } = useLocalSearchParams();
-  const { currentUser } = useCurrentUser();
+  const { currentUser, getToken } = useCurrentUser();
 
   // Fetch challenge data using TanStack Query
   const {
@@ -33,9 +33,10 @@ export default function ChallengeLayout() {
     isLoading: isLoadingMembership,
   } = useQuery({
     queryKey: queryKeys.challenges.membership(id as string),
-    queryFn: () => {
+    queryFn: async () => {
       if (!currentUser?.id) return null;
-      return challengesApi.getMembership(id as string, currentUser.id);
+      const token = await getToken();
+      return challengesApi.getMembership(id as string, token);
     },
     enabled: !!challenge && !!currentUser?.id,
     staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
@@ -43,33 +44,44 @@ export default function ChallengeLayout() {
   if (error) return <Text className="text-red-500">Error loading challenge details</Text>;
 
   return (
-    <MemberContextProvider
-      membership={membership ?? null}
-      setMembership={() => {}} // No-op, updates handled via query invalidation
-      challenge={challenge}>
-      {isLoading || error ? (
-        <View className="flex-1 items-center justify-center">
-          {isLoading && <ActivityIndicator size="large" color="black" />}
-          {error && <Text className="text-red-500">Error loading challenge details</Text>}
-        </View>
-      ) : (
-        <View className="pl-2 pr-2 pt-2">
-          <View className="mr-2 flex-row items-center ">
-            <Image
-              source={iconMap[challenge.icon as keyof typeof iconMap]}
-              className={`h-10 w-10 rounded-full border border-solid ${
-                challenge.color ? `border-${challenge.color}` : ''
-              }`}
-            />
-            <Text className="ml-2 break-words text-lg font-bold">{challenge.name}</Text>
+    <View className="flex-1">
+      <MemberContextProvider
+        membership={membership ?? null}
+        setMembership={() => {}} // No-op, updates handled via query invalidation
+        challenge={challenge}>
+        {isLoading || error ? (
+          <View className="flex-1 items-center justify-center bg-white">
+            {isLoading && (
+              <>
+                <ActivityIndicator size="large" color="#EF4444" />
+                <Text className="mt-4 text-gray-600">Loading challenge...</Text>
+              </>
+            )}
+            {error && <Text className="text-red-500">Error loading challenge details</Text>}
           </View>
-          <View className="mt-4">
-            <ChallengeDetailNavigation challenge={challenge} />
+        ) : (
+          <View className="flex-1">
+            <View className="pl-2 pr-2 pt-2">
+              <View className="mr-2 flex-row items-center ">
+                <Image
+                  source={iconMap[challenge.icon as keyof typeof iconMap]}
+                  className={`h-10 w-10 rounded-full border border-solid ${
+                    challenge.color ? `border-${challenge.color}` : ''
+                  }`}
+                />
+                <Text className="ml-2 break-words text-lg font-bold">{challenge.name}</Text>
+              </View>
+              <View className="mt-4">
+                <ChallengeDetailNavigation challenge={challenge} />
+              </View>
+            </View>
+            <View className="flex-1">
+              <Slot />
+            </View>
           </View>
-          <Slot />
-        </View>
-      )}
-    </MemberContextProvider>
+        )}
+      </MemberContextProvider>
+    </View>
   );
 }
 
@@ -92,11 +104,6 @@ const ChallengeDetailNavigation = ({ challenge }: { challenge: Challenge }) => {
         href={`/challenges/${challenge.id}/progress`}
         className={`${isCurrentRoute(`/progress`) ? 'font-bold text-red' : 'text-gray-500'}`}>
         Progress
-      </Link>
-      <Link
-        href={`/challenges/${challenge.id}/chat`}
-        className={`mr-4 ${isCurrentRoute(`/chat`) ? 'font-bold text-red' : 'text-gray-500'}`}>
-        Chat
       </Link>
       <CheckInButton />
     </View>

@@ -23,11 +23,20 @@ export default function ChallengeProgram(): JSX.Element {
   });
 
   if (isProgramLoading) {
-    return <ActivityIndicator size="small" color="#C4C4C4" />;
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#EF4444" />
+        <Text className="mt-4 text-gray-600">Loading program...</Text>
+      </View>
+    );
   }
 
   if (programError) {
-    return <Text className="text-red-500">Error loading program details</Text>;
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-red-500">Error loading program details</Text>
+      </View>
+    );
   }
   return (
     <ScrollView className="mb-5 rounded-md bg-white p-2">

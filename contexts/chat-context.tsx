@@ -81,12 +81,6 @@ export const ChatContextProvider = (props: ChatContextProviderProps) => {
   }, [commentsByDate, pendingComments]);
 
   useEffect(() => {
-    if (pendingComments.length > 0) {
-      props.onChange?.(mergedCommentsByDate);
-    }
-  }, [pendingComments, mergedCommentsByDate]);
-
-  useEffect(() => {
     if (!challengeId || !cohortId) return;
 
     if (!pusherKey) {
