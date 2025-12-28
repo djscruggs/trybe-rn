@@ -1,22 +1,11 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Localization from 'expo-localization';
-import * as Notifications from 'expo-notifications';
 import { DateTimeFormatOptions } from 'intl';
-import { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  Platform,
-  Alert,
-  Linking,
-  AppState,
-} from 'react-native';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
 import Share from 'react-native-share';
 
 import ChallengeNotificationModal from '~/components/ChallengeNotificationModal';
@@ -27,14 +16,21 @@ import { useMemberContext } from '~/contexts/member-context';
 import { challengesApi } from '~/lib/api/challengesApi';
 import { queryKeys } from '~/lib/api/queryKeys';
 import { API_HOST } from '~/lib/environment';
-import { textToJSX, calculateDuration } from '~/lib/helpers';
+import { calculateDuration } from '~/lib/helpers';
 import { getShortUrl } from '~/lib/helpers/challenge';
+import { logger } from '~/lib/logger';
+import { useNotificationPermissions } from '~/lib/useNotificationPermissions';
 
 export default function ChallengeAbout() {
   const { getToken, currentUser } = useCurrentUser();
   const { userId } = useAuth();
   const { membership, challenge } = useMemberContext();
   const queryClient = useQueryClient();
+  const {
+    notificationsEnabled,
+    requestNotificationPermissions,
+    showNotificationSettingsAlert,
+  } = useNotificationPermissions();
 
   const handleCopy = () => {
     const url = getShortUrl(challenge, membership);
@@ -51,52 +47,17 @@ export default function ChallengeAbout() {
   const [startDate, setStartDate] = useState(today);
   const [showTimePicker, setShowTimePicker] = useState(Platform.OS === 'ios');
   const [pickerMode, setPickerMode] = useState<'time' | 'date'>('time');
-  const [hasPromptedForNotifications, setHasPromptedForNotifications] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  // Check notification permissions
-  useEffect(() => {
-    const checkNotifications = async () => {
-      if (Platform.OS === 'web') {
-        setNotificationsEnabled(true);
-        return;
-      }
-
-      try {
-        const { status } = await Notifications.getPermissionsAsync();
-        setNotificationsEnabled(status === 'granted');
-      } catch (error) {
-        console.error('Error checking notification permissions:', error);
-        setNotificationsEnabled(false);
-      }
-    };
-
-    checkNotifications();
-
-    // Re-check when app comes to foreground (e.g., after returning from Settings)
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        checkNotifications();
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
-
-  // Check if user has been prompted for notifications before
-  useEffect(() => {
-    const checkNotificationPrompt = async () => {
-      const prompted = await AsyncStorage.getItem('hasPromptedForNotifications');
-      setHasPromptedForNotifications(prompted === 'true');
-    };
-    checkNotificationPrompt();
-  }, []);
 
   const handleJoinOrLeaveChallenge = () => {
+    logger.debug('[ChallengeAbout] handleJoinOrLeaveChallenge called');
+    logger.debug('[ChallengeAbout] isMember:', isMember);
+    logger.debug('[ChallengeAbout] userId:', userId);
+    logger.debug('[ChallengeAbout] currentUser:', currentUser?.id);
+
     // Check if user is authenticated before allowing join
     if ((!userId || !currentUser) && !isMember) {
+      logger.debug('[ChallengeAbout] User not authenticated, showing sign-in alert');
       Alert.alert('Sign In Required', 'Please sign in to join this challenge', [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -112,6 +73,7 @@ export default function ChallengeAbout() {
     }
 
     if (isMember) {
+      logger.debug('[ChallengeAbout] User is member, showing leave confirmation');
       // Show confirmation dialog for leaving the challenge
       Alert.alert(
         'Leave Challenge',
@@ -122,6 +84,7 @@ export default function ChallengeAbout() {
         ]
       );
     } else {
+      logger.debug('[ChallengeAbout] User is not member, showing time picker modal');
       // Show time picker modal for joining the challenge
       setShowTimeModal(true);
     }
@@ -133,7 +96,11 @@ export default function ChallengeAbout() {
       if (!currentUser?.id || !challenge?.id) {
         throw new Error('User not authenticated');
       }
-      return challengesApi.joinOrLeave(challenge.id.toString(), {}, currentUser.id);
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Failed to get auth token');
+      }
+      return challengesApi.joinOrLeave(challenge.id.toString(), {}, token);
     },
     onSuccess: () => {
       // Invalidate membership query to refetch
@@ -160,7 +127,11 @@ export default function ChallengeAbout() {
       if (!currentUser?.id || !challenge?.id) {
         throw new Error('User not authenticated');
       }
-      return challengesApi.joinOrLeave(challenge.id.toString(), data, currentUser.id);
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Failed to get auth token');
+      }
+      return challengesApi.joinOrLeave(challenge.id.toString(), data, token);
     },
     onSuccess: () => {
       // Invalidate membership query to refetch
@@ -191,9 +162,12 @@ export default function ChallengeAbout() {
   });
 
   const handleNotificationConfirm = async (notificationTime: Date, startDate: Date) => {
+    logger.debug('[ChallengeAbout] handleNotificationConfirm called');
+    logger.debug('[ChallengeAbout] notificationsEnabled:', notificationsEnabled);
     setShowTimeModal(false);
 
     if (!userId || !currentUser?.id) {
+      logger.debug('[ChallengeAbout] User not authenticated');
       setError('User not authenticated. Please sign in again.');
       return;
     }
@@ -201,30 +175,13 @@ export default function ChallengeAbout() {
     const notificationHour = notificationTime.getHours();
     const notificationMinute = notificationTime.getMinutes();
 
-    // Show notification permission message only once
-    if (Platform.OS !== 'web' && !hasPromptedForNotifications) {
-      Alert.alert(
-        'Notifications Required',
-        'This challenge requires notifications. Please enable them in your device settings.',
-        [
-          { text: 'OK' },
-          {
-            text: 'Open Settings',
-            onPress: () => {
-              Linking.openSettings().catch((err) => {
-                console.error('Failed to open settings:', err);
-                Alert.alert(
-                  'Unable to Open Settings',
-                  'Please open your device Settings app manually and enable notifications for this app.'
-                );
-              });
-            },
-          },
-        ]
-      );
-      // Mark that we've prompted the user
-      await AsyncStorage.setItem('hasPromptedForNotifications', 'true');
-      setHasPromptedForNotifications(true);
+    // Handle notification permissions
+    if (!notificationsEnabled) {
+      logger.debug('[ChallengeAbout] Notifications not enabled, requesting permissions...');
+      const granted = await requestNotificationPermissions();
+      logger.debug('[ChallengeAbout] Permission request result:', granted);
+    } else {
+      logger.debug('[ChallengeAbout] Notifications already enabled, skipping permission request');
     }
 
     const requestData: {
@@ -284,7 +241,6 @@ export default function ChallengeAbout() {
   return (
     <View className="bg-white p-2">
       {error && <ErrorText>{error}</ErrorText>}
-      {textToJSX(challenge?.description ?? '')}
       <LinkRenderer text={challenge?.description ?? ''} />
       {/* Program Details */}
       <View className="mb-6 mt-8">
@@ -355,16 +311,7 @@ export default function ChallengeAbout() {
                 to stay on track.
               </Text>
               <TouchableOpacity
-                onPress={() => {
-                  console.log('Open Settings button pressed');
-                  Linking.openSettings().catch((err) => {
-                    console.error('Failed to open settings:', err);
-                    Alert.alert(
-                      'Unable to Open Settings',
-                      'Please open your device Settings app manually and enable notifications for this app.'
-                    );
-                  });
-                }}
+                onPress={showNotificationSettingsAlert}
                 className="bg-blue-600 rounded-md px-4 py-2">
                 <Text className="text-center text-sm font-semibold text-white">Open Settings</Text>
               </TouchableOpacity>

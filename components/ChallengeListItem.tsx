@@ -1,29 +1,25 @@
 import React from 'react';
-import { Image, TouchableOpacity, GestureResponderEvent, View, Share } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Image, TouchableOpacity, GestureResponderEvent, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { Text } from '~/components/nativewindui/Text';
 import { iconMap, calculateDuration } from '~/lib/helpers';
-import { Challenge } from '~/lib/types';
+import { ChallengeSummary } from '~/lib/types';
 
 interface ChallengeListItemProps {
-  challenge: Challenge;
+  challenge: ChallengeSummary;
   onPress: (event: GestureResponderEvent) => void;
 }
 
 export function ChallengeListItem({ challenge, onPress }: ChallengeListItemProps) {
+  const router = useRouter();
   const duration = calculateDuration(challenge);
   const displayDuration = typeof duration === 'number' ? `${duration} days` : duration;
   const category = challenge.categories?.[0]?.name;
 
-  const handleShare = async () => {
-    try {
-      await Share.share({
-        message: `Check out this challenge: ${challenge.name}`,
-      });
-    } catch (error) {
-      console.error('Error sharing:', error);
-    }
+  const handleCheckIn = (event: GestureResponderEvent) => {
+    event.stopPropagation();
+    router.push(`/challenges/${challenge.id}/progress` as any);
   };
 
   return (
@@ -43,24 +39,29 @@ export function ChallengeListItem({ challenge, onPress }: ChallengeListItemProps
           {challenge.name}
         </Text>
         <View className="flex-row items-center gap-1">
-          <Text variant="caption1" color="secondary">
+          <Text variant="caption1" className="text-gray-700">
             {displayDuration}
           </Text>
           {category && (
             <>
-              <Text variant="caption1" color="secondary">
+              <Text variant="caption1" className="text-gray-700">
                 •
               </Text>
-              <Text variant="caption1" color="secondary">
+              <Text variant="caption1" className="text-gray-700">
                 {category}
               </Text>
             </>
           )}
         </View>
       </View>
-      <TouchableOpacity onPress={handleShare} hitSlop={10}>
-        <Feather name="share" size={20} color="gray" />
-      </TouchableOpacity>
+      {challenge.isMember && (
+        <TouchableOpacity
+          onPress={handleCheckIn}
+          className="rounded-full bg-red px-3 py-1.5"
+          hitSlop={10}>
+          <Text className="text-xs font-semibold text-white">Check In</Text>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }

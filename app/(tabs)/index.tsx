@@ -6,6 +6,8 @@ import { ChallengeListItem } from '~/components/ChallengeListItem';
 import { Text } from '~/components/nativewindui/Text';
 import { challengesApi } from '~/lib/api/challengesApi';
 import { queryKeys } from '~/lib/api/queryKeys';
+import { logger } from '~/lib/logger';
+import { ChallengeSummary } from '~/lib/types';
 import { useColorScheme } from '~/lib/useColorScheme';
 const ROOT_STYLE: ViewStyle = { flex: 1 };
 
@@ -19,7 +21,11 @@ export default function Home() {
 
   // Ensure data is an array before mapping
   const challenges = Array.isArray(data) ? data : [];
-  console.log('🎯 Home: Challenges count:', challenges.length);
+  logger.debug('🎯 Home: Challenges count:', challenges.length);
+  logger.debug(
+    '🎯 Home: Member challenges:',
+    challenges.filter((c) => c.isMember).length
+  );
 
   return (
     <View style={ROOT_STYLE} className="bg-background">
@@ -50,7 +56,7 @@ export default function Home() {
           )}
 
           <View className="gap-4">
-            {challenges?.map((challenge: any) => (
+            {challenges?.map((challenge: ChallengeSummary) => (
               <ChallengeListItem
                 key={`${challenge.id}-${challenge.name}`}
                 challenge={challenge}
