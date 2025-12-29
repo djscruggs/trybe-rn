@@ -32,3 +32,6 @@ android
 .obsidian/
 SCR-20251213-inxy.png
 emulator.log
+
+# Backup files
+*.backup

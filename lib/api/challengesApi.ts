@@ -1,7 +1,13 @@
 import axios from 'axios';
 
 import { API_HOST } from '~/lib/environment';
-import type { Challenge, ChallengeInputs, CheckIn, MemberChallenge } from '~/lib/types';
+import type {
+  Challenge,
+  ChallengeSummary,
+  ChallengeInputs,
+  CheckIn,
+  MemberChallenge,
+} from '~/lib/types';
 
 interface JoinChallengeParams {
   userId: string;
@@ -15,7 +21,7 @@ interface JoinChallengeResponse {
 }
 
 export const challengesApi = {
-  getActive: async (): Promise<Challenge[]> => {
+  getActive: async (): Promise<ChallengeSummary[]> => {
     const result = await axios.get(`${API_HOST}/api/challenges/active`);
     return result.data.challenges || [];
   },
