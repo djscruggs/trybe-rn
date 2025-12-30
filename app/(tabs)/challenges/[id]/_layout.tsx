@@ -49,9 +49,9 @@ export default function ChallengeLayout() {
         membership={membership ?? null}
         setMembership={() => {}} // No-op, updates handled via query invalidation
         challenge={challenge}>
-        {isLoading || error ? (
+        {isLoading || isLoadingMembership || error ? (
           <View className="flex-1 items-center justify-center bg-white">
-            {isLoading && (
+            {(isLoading || isLoadingMembership) && (
               <>
                 <ActivityIndicator size="large" color="#EF4444" />
                 <Text className="mt-4 text-gray-600">Loading challenge...</Text>
@@ -129,7 +129,12 @@ const CheckInButton = () => {
         className="rounded-full bg-red p-1 px-2">
         <Text className="text-xs font-bold text-white">Check In</Text>
       </TouchableOpacity>
-      <CheckInModal ref={checkInModalRef} onCheckInComplete={handleCheckInComplete} />
+      <CheckInModal
+        ref={checkInModalRef}
+        challengeId={challenge.id}
+        cohortId={membership.cohortId}
+        onCheckInComplete={handleCheckInComplete}
+      />
     </>
   );
 };

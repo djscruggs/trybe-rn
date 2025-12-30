@@ -9,12 +9,35 @@ import { queryKeys } from '~/lib/api/queryKeys';
 import { logger } from '~/lib/logger';
 import { ChallengeSummary } from '~/lib/types';
 import { useColorScheme } from '~/lib/useColorScheme';
+import { useCurrentUser } from '~/contexts/currentuser-context';
 const ROOT_STYLE: ViewStyle = { flex: 1 };
 
 export default function Home() {
+  const { getToken, currentUser } = useCurrentUser();
+
   const { data, error, isLoading } = useQuery({
     queryKey: queryKeys.challenges.active(),
-    queryFn: challengesApi.getActive,
+    queryFn: async () => {
+      try {
+        logger.debug('🎯 Home: Starting query...');
+        const token = await getToken();
+        logger.debug('🎯 Home: Token retrieved:', !!token);
+        logger.debug('🎯 Home: API_HOST:', require('~/lib/environment').API_HOST);
+        const result = await challengesApi.getActive(token);
+        logger.debug('🎯 Home: API response:', result?.length || 0);
+        return result;
+      } catch (err: any) {
+        logger.error('🎯 Home: Error fetching challenges:', err);
+        logger.error('🎯 Home: Error details:', {
+          message: err?.message,
+          code: err?.code,
+          status: err?.response?.status,
+        });
+        throw err;
+      }
+    },
+    retry: false,
+    staleTime: 0,
   });
 
   const router = useRouter();
@@ -26,6 +49,10 @@ export default function Home() {
     '🎯 Home: Member challenges:',
     challenges.filter((c) => c.isMember).length
   );
+
+  if (error) {
+    logger.error('🎯 Home: Query error:', error);
+  }
 
   return (
     <View style={ROOT_STYLE} className="bg-background">
@@ -52,7 +79,10 @@ export default function Home() {
           <Text className="mb-6 font-reklame text-3xl text-teal">Active Challenges</Text>
           {isLoading && <Text className="text-center font-source text-gray-500">Loading...</Text>}
           {error && (
-            <Text className="text-red-500 text-center font-source">Error loading challenges</Text>
+            <View className="p-4">
+              <Text className="text-red-500 text-center font-source">Error loading challenges</Text>
+              <Text className="text-gray-500 text-center text-xs mt-2">{String(error)}</Text>
+            </View>
           )}
 
           <View className="gap-4">

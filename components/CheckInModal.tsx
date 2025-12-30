@@ -13,19 +13,19 @@ import Toast from 'react-native-toast-message';
 
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
-import { useMemberContext } from '~/contexts/member-context';
 import { queryKeys } from '~/lib/api/queryKeys';
 import { API_HOST } from '~/lib/environment';
 import type { CheckIn } from '~/lib/types';
 
 interface CheckInModalProps {
   onCheckInComplete?: (checkIn: CheckIn) => void;
+  challengeId: string | number;
+  cohortId?: number | null;
 }
 
 export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
-  ({ onCheckInComplete }, ref) => {
+  ({ onCheckInComplete, challengeId, cohortId }, ref) => {
     const { currentUser } = useCurrentUser();
-    const { challenge, membership } = useMemberContext();
     const queryClient = useQueryClient();
     const [body, setBody] = useState('');
     const [image, setImage] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
     };
 
     const handleSubmit = async () => {
-      if (!currentUser?.id || !challenge?.id || !membership) {
+      if (!currentUser?.id || !challengeId) {
         Alert.alert('Error', 'Unable to check in. Please try again.');
         return;
       }
@@ -76,10 +76,10 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
         const formData = new FormData();
         formData.append('body', body);
         formData.append('userId', String(currentUser.id));
-        formData.append('challengeId', String(challenge.id));
+        formData.append('challengeId', String(challengeId));
 
-        if (membership.cohortId) {
-          formData.append('cohortId', String(membership.cohortId));
+        if (cohortId) {
+          formData.append('cohortId', String(cohortId));
         }
 
         if (image) {
@@ -99,7 +99,7 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
           Authorization: `Bearer ${currentUser.id}`,
         };
 
-        const url = `${API_HOST}/api/challenges/${challenge.id}/checkins`;
+        const url = `${API_HOST}/api/challenges/${challengeId}/checkins`;
 
         const response = await fetch(url, {
           method: 'POST',
@@ -115,16 +115,16 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
         const responseData = await response.json();
 
         // Invalidate queries to refetch updated data
-        if (challenge?.id && currentUser?.id) {
+        if (challengeId && currentUser?.id) {
           // Invalidate membership query
           queryClient.invalidateQueries({
-            queryKey: queryKeys.challenges.membership(challenge.id.toString()),
+            queryKey: queryKeys.challenges.membership(challengeId.toString()),
           });
 
           // Invalidate check-ins query to refresh progress chart
           queryClient.invalidateQueries({
             queryKey: queryKeys.challenges.checkIns(
-              challenge.id.toString(),
+              challengeId.toString(),
               currentUser.id.toString()
             ),
           });

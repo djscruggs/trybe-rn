@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Image, TouchableOpacity, GestureResponderEvent, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 import { Text } from '~/components/nativewindui/Text';
 import { iconMap, calculateDuration } from '~/lib/helpers';
 import { ChallengeSummary } from '~/lib/types';
+import { CheckInModal } from '~/components/CheckInModal';
 
 interface ChallengeListItemProps {
   challenge: ChallengeSummary;
@@ -16,9 +18,14 @@ export function ChallengeListItem({ challenge, onPress }: ChallengeListItemProps
   const duration = calculateDuration(challenge);
   const displayDuration = typeof duration === 'number' ? `${duration} days` : duration;
   const category = challenge.categories?.[0]?.name;
+  const checkInModalRef = useRef<BottomSheetModal>(null);
 
   const handleCheckIn = (event: GestureResponderEvent) => {
     event.stopPropagation();
+    checkInModalRef.current?.present();
+  };
+
+  const handleCheckInComplete = () => {
     router.push(`/challenges/${challenge.id}/progress` as any);
   };
 
@@ -55,12 +62,20 @@ export function ChallengeListItem({ challenge, onPress }: ChallengeListItemProps
         </View>
       </View>
       {challenge.isMember && (
-        <TouchableOpacity
-          onPress={handleCheckIn}
-          className="rounded-full bg-red px-3 py-1.5"
-          hitSlop={10}>
-          <Text className="text-xs font-semibold text-white">Check In</Text>
-        </TouchableOpacity>
+        <>
+          <TouchableOpacity
+            onPress={handleCheckIn}
+            className="rounded-full bg-red px-3 py-1.5"
+            hitSlop={10}>
+            <Text className="text-xs font-semibold text-white">Check In</Text>
+          </TouchableOpacity>
+          <CheckInModal
+            ref={checkInModalRef}
+            challengeId={challenge.id}
+            cohortId={null}
+            onCheckInComplete={handleCheckInComplete}
+          />
+        </>
       )}
     </TouchableOpacity>
   );

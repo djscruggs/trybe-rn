@@ -21,8 +21,11 @@ interface JoinChallengeResponse {
 }
 
 export const challengesApi = {
-  getActive: async (): Promise<ChallengeSummary[]> => {
-    const result = await axios.get(`${API_HOST}/api/challenges/active`);
+  getActive: async (token?: string | null): Promise<ChallengeSummary[]> => {
+    const config = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : {};
+    const result = await axios.get(`${API_HOST}/api/challenges/active`, config);
     return result.data.challenges || [];
   },
 

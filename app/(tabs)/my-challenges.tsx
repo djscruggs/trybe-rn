@@ -6,14 +6,20 @@ import { ChallengeListItem } from '~/components/ChallengeListItem';
 import { Text } from '~/components/nativewindui/Text';
 import { challengesApi } from '~/lib/api/challengesApi';
 import { queryKeys } from '~/lib/api/queryKeys';
+import { useCurrentUser } from '~/contexts/currentuser-context';
 const ROOT_STYLE: ViewStyle = { flex: 1 };
 
 export default function MyChallenges() {
   console.log('🏆 MyChallenges: Component rendering');
 
+  const { getToken, currentUser } = useCurrentUser();
+
   const { data, error, isLoading } = useQuery({
     queryKey: queryKeys.challenges.active(),
-    queryFn: challengesApi.getActive,
+    queryFn: async () => {
+      const token = await getToken();
+      return challengesApi.getActive(token);
+    },
   });
 
   const router = useRouter();
