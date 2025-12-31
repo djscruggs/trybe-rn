@@ -21,7 +21,15 @@
         }
       ],
       "expo-router",
-      "expo-localization"
+      "expo-localization",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "trybe-rn",
+          "organization": "dj-scruggs"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -35,9 +43,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.djscruggs.trybern",

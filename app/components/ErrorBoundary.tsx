@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 
+import { captureError } from '~/lib/sentry';
+
 interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
@@ -22,6 +24,10 @@ export class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('🚨 ErrorBoundary: Error details:', error, errorInfo);
+    // Send error to Sentry
+    captureError(error, {
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   render() {
@@ -41,5 +47,3 @@ export class ErrorBoundary extends React.Component<
     return this.props.children;
   }
 }
-
-

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { createContext, ReactNode, useContext, useState, useEffect } from 'react';
 
 import { API_HOST } from '~/lib/environment';
+import { setUser as setSentryUser } from '~/lib/sentry';
 import { type CurrentUser } from '~/lib/types';
 
 export interface CurrentUserContextType {
@@ -48,6 +49,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     if (userData) {
       setCurrentUser(userData);
+      // Set Sentry user context for better error tracking
+      setSentryUser({
+        id: userData.id?.toString(),
+        email: userData.email,
+        username: userData.username,
+      });
+    } else {
+      setSentryUser(null);
     }
   }, [userData]);
 
