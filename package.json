@@ -9,6 +9,12 @@
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
     "web": "expo start --web",
+    "build:preview:android": "eas build --profile preview --platform android",
+    "build:preview:ios": "eas build --profile preview --platform ios",
+    "build:preview:all": "eas build --profile preview --platform all",
+    "build:production:android": "eas build --profile production --platform android",
+    "build:production:ios": "eas build --profile production --platform ios",
+    "build:production:all": "eas build --profile production --platform all",
     "postinstall": "patch-package"
   },
   "dependencies": {
@@ -38,10 +44,10 @@
     "clsx": "^2.1.0",
     "date-fns": "^4.1.0",
     "expo": "~52.0.47",
+    "expo-auth-session": "~6.0.3",
     "expo-constants": "~17.0.5",
     "expo-crypto": "~14.0.2",
     "expo-dev-client": "~5.0.4",
-    "expo-dev-launcher": "^5.0.17",
     "expo-font": "~13.0.3",
     "expo-image-picker": "^17.0.9",
     "expo-linking": "~7.0.5",
@@ -75,7 +81,8 @@
     "react-native-web": "~0.19.10",
     "react-native-youtube": "^2.0.2",
     "tailwind-merge": "^2.2.1",
-    "zustand": "^4.5.1"
+    "zustand": "^4.5.1",
+    "patch-package": "^8.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -85,7 +92,6 @@
     "@typescript-eslint/parser": "^7.7.0",
     "eslint": "^8.57.0",
     "eslint-config-universe": "^12.0.1",
-    "patch-package": "^8.0.0",
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.0",
