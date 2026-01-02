@@ -59,6 +59,135 @@ Authentication is handled by **Clerk**:
     - Press `i` for iOS simulator
     - Press `a` for Android emulator
 
+## Git Worktree Workflow
+
+This project uses **git-worktree-utils** for managing multiple feature branches simultaneously. The repository is organized in a "bare repo + worktree" pattern.
+
+### Repository Structure
+
+```
+/Users/djscruggs/worktrees/trybe-rn/
+├── .bare/              # Git internals (shared across all worktrees)
+├── master/             # Master branch worktree
+├── feature/my-ui/      # Feature branch worktree
+└── hotfix/crash-fix/   # Hotfix branch worktree
+```
+
+### Why Use Worktrees?
+
+- **Parallel Development**: Work on multiple features/bugs simultaneously without branch switching
+- **Isolated Environments**: Each worktree has its own `node_modules/`, Metro cache, and uncommitted changes
+- **No Context Switching**: Keep dev servers running in different features
+- **Fast Branch Testing**: Quickly test PRs without disrupting your current work
+
+### Essential Commands
+
+```bash
+# Navigate to a worktree
+wt-cd trybe-rn master
+wt-cd trybe-rn feature/new-ui
+
+# Create new feature worktree
+wt-new trybe-rn feature/add-dark-mode
+
+# Create worktree from existing remote branch
+wt-continue trybe-rn feature/auth-improvements
+
+# List all worktrees
+wt-ls trybe-rn
+
+# Remove worktree (prompts to delete branch)
+wt-rm trybe-rn feature/completed-feature
+
+# Update master branch
+wt-update trybe-rn
+
+# Rebase current feature onto updated master
+cd /Users/djscruggs/worktrees/trybe-rn/feature/my-feature
+wt-rebase
+```
+
+### Common Workflows
+
+**Starting a New Feature:**
+```bash
+# Create worktree for new feature
+wt-new trybe-rn feature/add-notifications
+
+# Navigate to it
+cd /Users/djscruggs/worktrees/trybe-rn/feature/add-notifications
+
+# Install dependencies (required for each new worktree)
+npm install
+
+# Start development
+npx expo start
+```
+
+**Working on Multiple Features:**
+```bash
+# Terminal 1: Bug fix
+wt-cd trybe-rn hotfix/crash-on-ios
+npx expo start --ios
+
+# Terminal 2: Continue feature work
+wt-cd trybe-rn feature/new-ui
+# Your uncommitted changes are still here
+
+# Terminal 3: Review a PR
+wt-continue trybe-rn feature/colleague-pr
+npm test
+```
+
+**Cleaning Up After Merge:**
+```bash
+# Remove worktree after PR is merged
+wt-rm trybe-rn feature/completed-feature
+# Prompts: "Delete remote branch? (y/n)"
+```
+
+### Integration with Git Flow
+
+Git worktrees work seamlessly with Git Flow branching strategy:
+
+- **Git Flow**: Defines branch naming (`feature/*`, `release/*`, `hotfix/*`)
+- **Worktrees**: Provides workspace isolation for those branches
+
+You can use your Git Flow slash commands (`/feature`, `/release`, `/hotfix`) inside any worktree:
+
+```bash
+# Navigate to master worktree
+wt-cd trybe-rn master
+
+# Create feature using your slash command
+/feature my-new-feature
+# This creates feature/my-new-feature branch
+
+# Create a worktree for it
+wt-new trybe-rn feature/my-new-feature
+```
+
+### Important Notes for React Native
+
+1. **Dependencies**: Each worktree needs its own `npm install` after creation
+2. **Metro Bundler**: Can run simultaneously in different worktrees (different ports)
+3. **Build Artifacts**: `ios/` and `android/` folders are isolated per worktree
+4. **Environment Variables**: Shared across worktrees (from `.bare/.git/config`)
+
+### Configuration
+
+Environment variables in `~/.zshrc`:
+```bash
+export WORKTREE_BASE="/Users/djscruggs/worktrees"
+export CROSS_REPO_BASE="/Users/djscruggs/cross-repo-tasks"
+export CROSS_REPO_ARCHIVE="/Users/djscruggs/cross-repo-tasks/wt-archive"
+```
+
+### When to Use This vs Original Repo
+
+- **Use Worktrees**: For active development with multiple concurrent features
+- **Original Repo** (`/Users/djscruggs/VSCode/trybe-rn`): Can be archived or kept as backup
+
 ## API Documentation
 
 The file `scratchpad/MOBILE_CLIENT_PROCESSES.md` serves as the **API Contract** for this mobile client.
