@@ -1,8 +1,8 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { createContext, ReactNode, useContext, useState, useEffect } from 'react';
 
+import { apiClient } from '~/lib/api/client';
 import { API_HOST } from '~/lib/environment';
 import { setUser as setSentryUser } from '~/lib/sentry';
 import { type CurrentUser } from '~/lib/types';
@@ -30,7 +30,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     queryFn: async () => {
       if (!userId) return null;
       try {
-        const result = await axios.get(`${API_HOST}/api/clerk/${userId}`, {
+        const result = await apiClient.get(`${API_HOST}/api/clerk/${userId}`, {
           timeout: 5000, // 5 second timeout
         });
         return result.data;

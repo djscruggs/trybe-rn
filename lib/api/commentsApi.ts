@@ -1,5 +1,4 @@
-import axios from 'axios';
-
+import { apiClient } from '~/lib/api/client';
 import { API_HOST } from '~/lib/environment';
 import type { Comment } from '~/lib/types';
 
@@ -10,7 +9,7 @@ export const commentsApi = {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await axios.get(`${API_HOST}/api/comments/challenge/${challengeId}`, {
+    const response = await apiClient.get(`${API_HOST}/api/comments/challenge/${challengeId}`, {
       headers,
     });
     return response.data || [];
@@ -21,7 +20,7 @@ export const commentsApi = {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'multipart/form-data',
     };
-    const response = await axios.post(`${API_HOST}/api/comments`, data, { headers });
+    const response = await apiClient.post(`${API_HOST}/api/comments`, data, { headers });
     return response.data;
   },
 
@@ -34,6 +33,6 @@ export const commentsApi = {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'multipart/form-data',
     };
-    await axios.post(`${API_HOST}/api/comments`, formData, { headers });
+    await apiClient.post(`${API_HOST}/api/comments`, formData, { headers });
   },
 };

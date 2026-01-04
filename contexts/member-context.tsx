@@ -1,7 +1,7 @@
-import axios from 'axios';
 import { createContext, type ReactNode, useContext, useState } from 'react';
 
 import { useCurrentUser } from '~/contexts/currentuser-context';
+import { apiClient } from '~/lib/api/client';
 import { API_HOST } from '~/lib/environment';
 import { type MemberChallenge, type CheckIn, Challenge } from '~/lib/types';
 
@@ -69,7 +69,7 @@ export const MemberContextProvider = ({
         headers.Authorization = `Bearer ${currentUser.id}`;
       }
       
-      const response = await axios.get(url, { headers });
+      const response = await apiClient.get(url, { headers });
       setCheckIns(response.data.checkIns as CheckIn[]);
       setUpdated(true);
     } catch (error) {

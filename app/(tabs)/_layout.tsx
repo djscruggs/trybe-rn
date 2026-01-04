@@ -38,6 +38,7 @@ function TabsContent() {
           name="index"
           options={{
             title: 'Home',
+            headerShown: false,
             tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="home" color={color} />,
           }}
         />
@@ -89,6 +90,8 @@ function TabsContent() {
           name="about"
           options={{
             href: null,
+            headerShown: false,
+            tabBarStyle: { display: 'none' },
           }}
         />
         <Tabs.Screen

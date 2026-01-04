@@ -1,11 +1,10 @@
-import axios from 'axios';
-
+import { apiClient } from '~/lib/api/client';
 import { API_HOST } from '~/lib/environment';
 import type { Category } from '~/lib/types';
 
 export const categoriesApi = {
   getAll: async (): Promise<Category[]> => {
-    const response = await axios.get(`${API_HOST}/api/categories`);
+    const response = await apiClient.get(`${API_HOST}/api/categories`);
     return response.data.categories || [];
   },
 };

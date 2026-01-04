@@ -1,5 +1,6 @@
-import axios from 'axios';
 import { isPast, isFuture } from 'date-fns';
+
+import { apiClient } from '~/lib/api/client';
 import { type DateTimeFormatOptions } from 'intl';
 import { useState, useEffect, useContext } from 'react';
 import { HiOutlineClipboardCopy } from 'react-icons/hi';
@@ -53,7 +54,7 @@ export default function ChallengeOverview(props: ChallengeOverviewProps): JSX.El
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const fetchCheckIns = async (): Promise<void> => {
     try {
-      const response = await axios.get(`/api/checkins/${challenge.id}/${currentUser?.id}`);
+      const response = await apiClient.get(`/api/checkins/${challenge.id}/${currentUser?.id}`);
       setCheckIns(response.data.checkIns as CheckIn[]);
     } catch (error) {
       console.error('Error fetching check-ins:', error);
@@ -273,7 +274,7 @@ export function EditMembership(props: EditMembershipProps): JSX.Element {
       data.append('startAt', startAt.toISOString());
     }
     const url = `/api/memberchallenges/${membership.id}`;
-    const response = await axios.post(url, data);
+    const response = await apiClient.post(url, data);
     setLoading(false);
     setMembership(response.data.result as MemberChallenge);
     afterSave(response.data.result as MemberChallenge);

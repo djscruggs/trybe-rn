@@ -1,5 +1,4 @@
-import axios from 'axios';
-
+import { apiClient } from '~/lib/api/client';
 import { API_HOST } from '~/lib/environment';
 import type {
   Challenge,
@@ -25,28 +24,28 @@ export const challengesApi = {
     const config = token
       ? { headers: { Authorization: `Bearer ${token}` } }
       : {};
-    const result = await axios.get(`${API_HOST}/api/challenges/active`, config);
+    const result = await apiClient.get(`${API_HOST}/api/challenges/active`, config);
     return result.data.challenges || [];
   },
 
   get: async (id: string): Promise<Challenge> => {
-    const response = await axios.get(`${API_HOST}/api/challenges/v/${id}`);
+    const response = await apiClient.get(`${API_HOST}/api/challenges/v/${id}`);
     return response.data;
   },
 
   getProgram: async (id: string): Promise<any> => {
-    const response = await axios.get(`${API_HOST}/api/challenges/v/${id}/program`);
+    const response = await apiClient.get(`${API_HOST}/api/challenges/v/${id}/program`);
     return response.data;
   },
 
   getPost: async (id: string): Promise<any> => {
-    const response = await axios.get(`${API_HOST}/api/posts/${id}`);
+    const response = await apiClient.get(`${API_HOST}/api/posts/${id}`);
     return response.data;
   },
 
   getMembership: async (id: string, token: string): Promise<MemberChallenge | null> => {
     const headers = { Authorization: `Bearer ${token}` };
-    const response = await axios.get(`${API_HOST}/api/challenges/v/${id}/membership`, {
+    const response = await apiClient.get(`${API_HOST}/api/challenges/v/${id}/membership`, {
       headers,
     });
     return response.data.membership;
@@ -57,7 +56,7 @@ export const challengesApi = {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'multipart/form-data',
     };
-    const response = await axios.post(`${API_HOST}/api/challenges`, data, { headers });
+    const response = await apiClient.post(`${API_HOST}/api/challenges`, data, { headers });
     return response.data.challenge;
   },
 
@@ -67,7 +66,7 @@ export const challengesApi = {
     token: string
   ): Promise<JoinChallengeResponse | null> => {
     const headers = { Authorization: `Bearer ${token}` };
-    const response = await axios.post(`${API_HOST}/api/challenges/join-unjoin/${id}`, data, {
+    const response = await apiClient.post(`${API_HOST}/api/challenges/join-unjoin/${id}`, data, {
       headers,
     });
     return response.data;
@@ -91,12 +90,12 @@ export const challengesApi = {
       headers.Authorization = `Bearer ${userId}`;
     }
 
-    const response = await axios.get(url, { headers });
+    const response = await apiClient.get(url, { headers });
     return response.data.checkIns || [];
   },
 
   updateMembership: async (membershipId: string, data: any): Promise<any> => {
-    const response = await axios.post(`${API_HOST}/api/membership/${membershipId}`, data);
+    const response = await apiClient.post(`${API_HOST}/api/membership/${membershipId}`, data);
     return response.data;
   },
 };
