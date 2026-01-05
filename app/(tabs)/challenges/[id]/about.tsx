@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Feather } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Localization from 'expo-localization';
 import { DateTimeFormatOptions } from 'intl';
@@ -26,11 +26,8 @@ export default function ChallengeAbout() {
   const { userId } = useAuth();
   const { membership, challenge } = useMemberContext();
   const queryClient = useQueryClient();
-  const {
-    notificationsEnabled,
-    requestNotificationPermissions,
-    showNotificationSettingsAlert,
-  } = useNotificationPermissions();
+  const { notificationsEnabled, requestNotificationPermissions, showNotificationSettingsAlert } =
+    useNotificationPermissions();
 
   const handleCopy = () => {
     const url = getShortUrl(challenge, membership);
@@ -47,7 +44,6 @@ export default function ChallengeAbout() {
   const [startDate, setStartDate] = useState(today);
   const [showTimePicker, setShowTimePicker] = useState(Platform.OS === 'ios');
   const [pickerMode, setPickerMode] = useState<'time' | 'date'>('time');
-
 
   const handleJoinOrLeaveChallenge = () => {
     logger.debug('[ChallengeAbout] handleJoinOrLeaveChallenge called');
@@ -80,7 +76,7 @@ export default function ChallengeAbout() {
         'Are you sure you want to leave this challenge? All your check-ins will be lost.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Leave', style: 'destructive', onPress: handleLeaveChallenge },
+          { text: 'Leave', style: 'destructive', onPress: handleJoinOrLeaveChallenge },
         ]
       );
     } else {
