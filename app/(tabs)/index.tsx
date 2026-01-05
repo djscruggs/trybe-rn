@@ -5,17 +5,16 @@ import { View, ViewStyle, ScrollView, Image, TouchableOpacity, Linking } from 'r
 
 import { ChallengeListItem } from '~/components/ChallengeListItem';
 import { Text } from '~/components/nativewindui/Text';
+import { useAuthSheet } from '~/contexts/auth-sheet-context';
+import { useCurrentUser } from '~/contexts/currentuser-context';
 import { challengesApi } from '~/lib/api/challengesApi';
 import { queryKeys } from '~/lib/api/queryKeys';
 import { logger } from '~/lib/logger';
 import { ChallengeSummary } from '~/lib/types';
-import { useCurrentUser } from '~/contexts/currentuser-context';
-import { useAuthSheet } from '~/contexts/auth-sheet-context';
-import { calculateDuration } from '~/lib/helpers';
 const ROOT_STYLE: ViewStyle = { flex: 1 };
 
 export default function Home() {
-  const { getToken, currentUser } = useCurrentUser();
+  const { getToken } = useCurrentUser();
   const { isSignedIn } = useAuth();
   const { openSignUp } = useAuthSheet();
   const router = useRouter();
@@ -24,10 +23,7 @@ export default function Home() {
     queryKey: queryKeys.challenges.active(),
     queryFn: async () => {
       try {
-        logger.debug('🎯 Home: Starting query...');
         const token = await getToken();
-        logger.debug('🎯 Home: Token retrieved:', !!token);
-        logger.debug('🎯 Home: API_HOST:', require('~/lib/environment').API_HOST);
         const result = await challengesApi.getActive(token);
         logger.debug('🎯 Home: API response:', result?.length || 0);
         return result;
@@ -67,9 +63,7 @@ export default function Home() {
       <ScrollView className="bg-white" contentContainerClassName="pb-20">
         {/* Header Section - Matching Splash */}
         <View className="items-center bg-white px-6 pb-8 pt-20">
-          <Text className="font-source text-sm uppercase tracking-widest text-red">
-            WELCOME TO
-          </Text>
+          <Text className="font-source text-sm uppercase tracking-widest text-red">WELCOME TO</Text>
           <Text className="font-reklame text-7xl text-red" style={{ marginTop: 8 }}>
             Trybe
           </Text>
@@ -116,9 +110,9 @@ export default function Home() {
           <Text className="font-source text-xl font-bold text-gray-800">
             How's Your Experience?
           </Text>
-          <Text className="font-source mt-3 text-sm leading-6 text-gray-700">
-            Trybe is in BETA mode so there's plenty of room for improvement. We want to know what
-            to fix, what to add, what to delete, what fonts are giving you the ick, what spelling
+          <Text className="mt-3 font-source text-sm leading-6 text-gray-700">
+            Trybe is in BETA mode so there's plenty of room for improvement. We want to know what to
+            fix, what to add, what to delete, what fonts are giving you the ick, what spelling
             mistakes you've noticed and everything in between.
           </Text>
           <TouchableOpacity onPress={handleFeedbackPress} className="mt-4">
