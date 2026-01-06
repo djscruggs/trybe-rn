@@ -10,11 +10,13 @@ import { MemberContextProvider, useMemberContext } from '~/contexts/member-conte
 import { challengesApi } from '~/lib/api/challengesApi';
 import { queryKeys } from '~/lib/api/queryKeys';
 import { iconMap } from '~/lib/helpers';
+import { useCheckInPrompt } from '~/lib/hooks/useCheckInPrompt';
 import { Challenge, MemberChallenge } from '~/lib/types';
 
 export default function ChallengeLayout() {
   const { id } = useLocalSearchParams();
   const { currentUser, getToken } = useCurrentUser();
+  const router = useRouter();
 
   // Fetch challenge data using TanStack Query
   const {
@@ -41,6 +43,15 @@ export default function ChallengeLayout() {
     enabled: !!challenge && !!currentUser?.id,
     staleTime: process.env.NODE_ENV === 'development' ? 0 : 1000 * 60,
   });
+
+  // Auto-prompt for check-in if user hasn't checked in today
+  const { checkInModalRef } = useCheckInPrompt(id as string, membership ?? null);
+
+  const handleCheckInComplete = () => {
+    // Redirect to Progress tab after successful check-in
+    router.push(`/challenges/${id}/progress`);
+  };
+
   if (error) return <Text className="text-red-500">Error loading challenge details</Text>;
 
   return (
@@ -78,6 +89,15 @@ export default function ChallengeLayout() {
             <View className="flex-1">
               <Slot />
             </View>
+            {/* Auto check-in prompt modal */}
+            {membership && challenge && (
+              <CheckInModal
+                ref={checkInModalRef}
+                challengeId={challenge.id}
+                cohortId={membership.cohortId}
+                onCheckInComplete={handleCheckInComplete}
+              />
+            )}
           </View>
         )}
       </MemberContextProvider>
