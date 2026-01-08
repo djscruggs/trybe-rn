@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { View, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import UserAvatar from '~/components/UserAvatar';
 
 export function AppHeader() {
@@ -19,7 +20,9 @@ export function AppHeader() {
   };
 
   return (
-    <View className="flex-row items-center justify-end px-4 pb-2 bg-white border-b border-gray-200" style={{ paddingTop: insets.top + 8 }}>
+    <View
+      className="flex-row items-center justify-end border-b border-gray-200 bg-white px-4 pb-2"
+      style={{ paddingTop: insets.top + 8 }}>
       <View className="flex-row items-center gap-3">
         <TouchableOpacity onPress={handleNotificationsPress} className="p-1">
           <Ionicons name="notifications-outline" size={24} color="#000" />

@@ -13,9 +13,9 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import UserAvatar from '~/components/UserAvatar';
 
 import { SignOutButton } from '~/components/SignOutButton';
+import UserAvatar from '~/components/UserAvatar';
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
 
