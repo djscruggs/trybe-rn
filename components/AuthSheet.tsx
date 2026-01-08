@@ -1,9 +1,4 @@
 import { useAuth, useSignUp, useSignIn, useSSO } from '@clerk/clerk-expo';
-import * as AuthSession from 'expo-auth-session';
-import { router } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useEffect, useState, useMemo, forwardRef } from 'react';
-import { View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetScrollView,
@@ -11,11 +6,16 @@ import {
   BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import * as AuthSession from 'expo-auth-session';
+import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import React, { useCallback, useEffect, useState, useMemo, forwardRef } from 'react';
+import { View, ActivityIndicator, TouchableOpacity } from 'react-native';
 
 import { SocialAuthButtons } from '~/components/SocialAuthButtons';
 import { Text } from '~/components/nativewindui/Text';
-import { useCurrentUser } from '~/contexts/currentuser-context';
 import { useAuthSheet } from '~/contexts/auth-sheet-context';
+import { useCurrentUser } from '~/contexts/currentuser-context';
 
 export const useWarmUpBrowser = () => {
   useEffect(() => {
@@ -177,7 +177,6 @@ export const AuthSheet = forwardRef<BottomSheetModal>((props, ref) => {
     } catch (err: any) {
       // Handle session already exists - user is already signed in, just redirect
       if (err?.errors?.[0]?.code === 'session_exists') {
-        console.log('Session already exists, redirecting to home');
         closeSheet();
         setTimeout(() => {
           router.replace('/');
@@ -205,11 +204,9 @@ export const AuthSheet = forwardRef<BottomSheetModal>((props, ref) => {
             router.replace('/');
           }, 300);
         } else {
-          console.log('Additional steps required for authentication');
         }
       } catch (err: any) {
         if (err?.errors?.[0]?.code === 'session_exists') {
-          console.log('Session already exists, redirecting to home');
           closeSheet();
           setTimeout(() => {
             router.replace('/');
@@ -301,7 +298,7 @@ export const AuthSheet = forwardRef<BottomSheetModal>((props, ref) => {
                       autoComplete="password-new"
                     />
                     {passwordError ? (
-                      <Text className="mb-3 text-sm text-red-600">{passwordError}</Text>
+                      <Text className="text-red-600 mb-3 text-sm">{passwordError}</Text>
                     ) : null}
                     <TouchableOpacity
                       onPress={onSignUpPress}
@@ -325,7 +322,7 @@ export const AuthSheet = forwardRef<BottomSheetModal>((props, ref) => {
                   <TouchableOpacity onPress={switchToSignIn} className="mb-4">
                     <Text className="text-center text-base text-gray-700">
                       Already have an account?{' '}
-                      <Text className="font-semibold text-red-600">Sign In</Text>
+                      <Text className="text-red-600 font-semibold">Sign In</Text>
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -390,7 +387,7 @@ export const AuthSheet = forwardRef<BottomSheetModal>((props, ref) => {
                 <TouchableOpacity onPress={switchToSignUp} className="mb-4">
                   <Text className="text-center text-base text-gray-700">
                     Don't have an account?{' '}
-                    <Text className="font-semibold text-red-600">Sign Up</Text>
+                    <Text className="text-red-600 font-semibold">Sign Up</Text>
                   </Text>
                 </TouchableOpacity>
               </>

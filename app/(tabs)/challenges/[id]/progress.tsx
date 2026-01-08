@@ -14,10 +14,6 @@ export default function ChallengeProgress() {
   const { challenge, membership } = useMemberContext();
   const { currentUser, getToken } = useCurrentUser();
 
-  console.log('Progress: challenge', challenge?.id);
-  console.log('Progress: membership', membership?.id);
-  console.log('Progress: currentUser', currentUser?.id);
-
   const userId = membership?.userId ?? currentUser?.id;
   const challengeId = challenge?.id?.toString();
   const cohortId = membership?.cohortId;
@@ -41,7 +37,6 @@ export default function ChallengeProgress() {
     enabled: !!challengeId && !!userId,
   });
 
-  console.log('Progress: checkIns', checkIns.length, 'isLoading', isLoading, 'error', error);
 
   if (!challenge) {
     return (

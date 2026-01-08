@@ -3,7 +3,14 @@ import { SocialIcon } from '@rneui/themed';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from 'react';
-import { View, Button, TextInput, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
+import {
+  View,
+  Button,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  SafeAreaView,
+} from 'react-native';
 
 import { Text } from '~/components/nativewindui/Text';
 import { useCurrentUser } from '~/contexts/currentuser-context';
@@ -48,7 +55,6 @@ export default function SignInPage() {
     } catch (err: any) {
       // Handle session already exists - user is already signed in, just redirect
       if (err?.errors?.[0]?.code === 'session_exists') {
-        console.log('Session already exists, redirecting to home');
         router.replace('/');
         return;
       }
@@ -71,9 +77,7 @@ export default function SignInPage() {
   return (
     <View className="flex-1 items-center justify-center bg-white px-5">
       <View className="mb-8 items-center">
-        <Text className="mb-4 text-3xl font-bold text-gray-900">
-          Welcome Back
-        </Text>
+        <Text className="mb-4 text-3xl font-bold text-gray-900">Welcome Back</Text>
         <Text className="text-center text-base text-gray-600">
           Sign in to continue your journey with Trybe
         </Text>
@@ -91,7 +95,7 @@ export default function SignInPage() {
           value={password}
           placeholder="Password..."
           placeholderTextColor="#000"
-          secureTextEntry={true}
+          secureTextEntry
           onChangeText={(password) => setPassword(password)}
           className="mb-4 h-12 rounded-lg border border-gray-300 px-4"
         />
@@ -123,13 +127,9 @@ export default function SignInPage() {
         />
       </View>
 
-      <TouchableOpacity
-        onPress={() => router.push('/sign-up')}
-        className="mt-6"
-      >
+      <TouchableOpacity onPress={() => router.push('/sign-up')} className="mt-6">
         <Text className="text-center text-base text-gray-700">
-          Don't have an account?{' '}
-          <Text className="font-semibold text-red-600">Sign Up</Text>
+          Don't have an account? <Text className="text-red-600 font-semibold">Sign Up</Text>
         </Text>
       </TouchableOpacity>
     </View>

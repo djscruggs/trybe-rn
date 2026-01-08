@@ -19,13 +19,10 @@ export const useSocialAuth = () => {
         if (createdSessionId) {
           setSSOActive!({ session: createdSessionId });
           router.replace('/');
-        } else {
-          console.log('Additional steps required for authentication');
         }
       } catch (err: any) {
         // Handle session already exists error
         if (err?.errors?.[0]?.code === 'session_exists') {
-          console.log('Session already exists, redirecting to home');
           router.replace('/');
           return;
         }

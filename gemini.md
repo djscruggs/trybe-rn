@@ -246,3 +246,4 @@ blz add [name of project] ./llms.txt
 blz add bun https://bun.sh/llms.txt
 blz add turborepo https://turborepo.com/llms.txt
 ```
+- The current year is 2026. When searching, make sure you include the current year.

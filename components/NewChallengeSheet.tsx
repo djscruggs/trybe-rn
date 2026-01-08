@@ -13,8 +13,8 @@ import Toast from 'react-native-toast-message';
 import { DatePicker } from '~/components/nativewindui/DatePicker/DatePicker';
 import { Picker, PickerItem } from '~/components/nativewindui/Picker';
 import { Text } from '~/components/nativewindui/Text';
-import { useNewChallengeSheet } from '~/contexts/new-challenge-sheet-context';
 import { useCurrentUser } from '~/contexts/currentuser-context';
+import { useNewChallengeSheet } from '~/contexts/new-challenge-sheet-context';
 import { categoriesApi } from '~/lib/api/categoriesApi';
 import { challengesApi } from '~/lib/api/challengesApi';
 import { queryKeys } from '~/lib/api/queryKeys';
@@ -252,6 +252,17 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
     );
   }
 
+  const TextAreaStyle = {
+    minHeight: 96,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    backgroundColor: 'white',
+    padding: 12,
+    fontSize: 16,
+    textAlignVertical: 'top',
+  };
+
   return (
     <BottomSheetModal
       ref={ref}
@@ -277,7 +288,7 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
               value={formData.name || ''}
               onChangeText={(text) => updateField('name', text)}
               placeholder="Give your challenge a catchy name"
-              className="h-12 rounded-lg border border-gray-300 px-4"
+              style={TextAreaStyle}
             />
             {errors.name && <Text className="text-red-500 mt-1 text-sm">{errors.name}</Text>}
           </View>
@@ -286,13 +297,13 @@ export const NewChallengeSheet = forwardRef<BottomSheetModal>((props, ref) => {
           <View className="mb-4">
             <Text className="mb-2 text-base font-medium text-gray-700">Description *</Text>
             <BottomSheetTextInput
-              value={formData.description || ''}
+              defaultValue={formData.description || ''}
               onChangeText={(text) => updateField('description', text)}
               placeholder="Share a short description of what this challenge is all about"
               multiline
-              numberOfLines={3}
+              numberOfLines={4}
               textAlignVertical="top"
-              className="rounded-lg border border-gray-300 p-4"
+              style={TextAreaStyle}
             />
             {errors.description && (
               <Text className="text-red-500 mt-1 text-sm">{errors.description}</Text>

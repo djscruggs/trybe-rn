@@ -1,8 +1,8 @@
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, Slot, Link, usePathname, useRouter } from 'expo-router';
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Text, View, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 import { CheckInModal } from '~/components/CheckInModal';
 import { useCurrentUser } from '~/contexts/currentuser-context';
@@ -13,7 +13,11 @@ import { iconMap } from '~/lib/helpers';
 import { useCheckInPrompt } from '~/lib/hooks/useCheckInPrompt';
 import { Challenge, MemberChallenge } from '~/lib/types';
 
+let renderCount = 0;
+
 export default function ChallengeLayout() {
+  renderCount += 1;
+
   const { id } = useLocalSearchParams();
   const { currentUser, getToken } = useCurrentUser();
   const router = useRouter();
@@ -30,10 +34,7 @@ export default function ChallengeLayout() {
   });
 
   // Fetch membership data using TanStack Query
-  const {
-    data: membership,
-    isLoading: isLoadingMembership,
-  } = useQuery({
+  const { data: membership, isLoading: isLoadingMembership } = useQuery({
     queryKey: queryKeys.challenges.membership(id as string),
     queryFn: async () => {
       if (!currentUser?.id) return null;
@@ -47,10 +48,10 @@ export default function ChallengeLayout() {
   // Auto-prompt for check-in if user hasn't checked in today
   const { checkInModalRef } = useCheckInPrompt(id as string, membership ?? null);
 
-  const handleCheckInComplete = () => {
+  const handleCheckInComplete = useCallback(() => {
     // Redirect to Progress tab after successful check-in
     router.push(`/challenges/${id}/progress`);
-  };
+  }, [id, router]);
 
   if (error) return <Text className="text-red-500">Error loading challenge details</Text>;
 
@@ -135,12 +136,13 @@ const CheckInButton = () => {
   const router = useRouter();
   const checkInModalRef = useRef<BottomSheetModal>(null);
 
-  if (!membership || !challenge) return null;
-
-  const handleCheckInComplete = () => {
+  const handleCheckInComplete = useCallback(() => {
+    if (!challenge?.id) return;
     // Redirect to Progress tab after successful check-in
     router.push(`/challenges/${challenge.id}/progress`);
-  };
+  }, [challenge?.id, router]);
+
+  if (!membership || !challenge) return null;
 
   return (
     <>

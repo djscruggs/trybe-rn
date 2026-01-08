@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, memo } from 'react';
 import {
   View,
   TextInput,
@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Text as RNText,
 } from 'react-native';
 
 import { DatePicker } from '~/components/nativewindui/DatePicker/DatePicker';
@@ -44,10 +45,60 @@ const COLORS = ['red', 'orange', 'salmon', 'yellow', 'green', 'blue', 'purple'] 
 // Get available icon keys from iconMap
 const AVAILABLE_ICONS = Object.keys(iconMap) as (keyof typeof iconMap)[];
 
+// Memoized description field to prevent re-renders from parent
+const DescriptionField = memo(({
+  descriptionRef,
+  error,
+  inputKey
+}: {
+  descriptionRef: React.MutableRefObject<string>;
+  error?: string;
+  inputKey: number;
+}) => {
+  return (
+    <View style={{ marginBottom: 16 }}>
+      <RNText style={{ marginBottom: 8, fontSize: 16, fontWeight: '500', color: '#374151' }}>
+        Description *
+      </RNText>
+      <TextInput
+        key={`description-${inputKey}`}
+        defaultValue={descriptionRef.current}
+        onChangeText={(text) => {
+          descriptionRef.current = text;
+        }}
+        placeholder="Share a short description of what this challenge is all about"
+        multiline
+        numberOfLines={3}
+        style={{
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: '#D1D5DB',
+          padding: 16,
+          textAlignVertical: 'top',
+          minHeight: 80,
+        }}
+      />
+      {error && (
+        <RNText style={{ color: '#EF4444', marginTop: 4, fontSize: 14 }}>{error}</RNText>
+      )}
+    </View>
+  );
+});
+
+DescriptionField.displayName = 'DescriptionField';
+
+let renderCount = 0;
+
 export default function NewChallengeScreen() {
+  renderCount++;
+
+
   const queryClient = useQueryClient();
   const { currentUser } = useCurrentUser();
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const nameRef = useRef('');
+  const descriptionRef = useRef('');
+  const [inputKey, setInputKey] = useState(0);
 
   // Fetch categories using TanStack Query
   const {
@@ -57,6 +108,7 @@ export default function NewChallengeScreen() {
   } = useQuery({
     queryKey: queryKeys.categories.all,
     queryFn: categoriesApi.getAll,
+    staleTime: Infinity, // Categories rarely change, prevent refetch during form interaction
   });
 
   // Show error alert for categories loading failure
@@ -64,10 +116,8 @@ export default function NewChallengeScreen() {
     Alert.alert('Error', 'Failed to load categories');
   }
 
-  // Form state
+  // Form state (name and description managed via refs to avoid jitter)
   const [formData, setFormData] = useState<Partial<ChallengeInputs>>({
-    name: '',
-    description: '',
     icon: undefined,
     color: 'red',
     categories: [],
@@ -104,38 +154,49 @@ export default function NewChallengeScreen() {
   });
 
   // Update form field
-  const updateField = (field: keyof ChallengeInputs, value: any) => {
+  const updateField = useCallback((field: keyof ChallengeInputs, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error for this field
-    if (errors[field as keyof ValidationErrors]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
+    setErrors((prev) => {
+      if (prev[field as keyof ValidationErrors]) {
+        return { ...prev, [field]: undefined };
+      }
+      return prev;
+    });
+  }, []);
 
   // Toggle category selection
-  const toggleCategory = (category: Category) => {
-    const currentCategories = formData.categories || [];
-    const isSelected = currentCategories.some((c) => c.id === category.id);
+  const toggleCategory = useCallback((category: Category) => {
+    setFormData((prev) => {
+      const currentCategories = prev.categories || [];
+      const isSelected = currentCategories.some((c) => c.id === category.id);
 
-    if (isSelected) {
-      updateField(
-        'categories',
-        currentCategories.filter((c) => c.id !== category.id)
-      );
-    } else {
-      updateField('categories', [...currentCategories, category]);
-    }
-  };
+      return {
+        ...prev,
+        categories: isSelected
+          ? currentCategories.filter((c) => c.id !== category.id)
+          : [...currentCategories, category]
+      };
+    });
+
+    // Clear category error if one was set
+    setErrors((prev) => {
+      if (prev.categories) {
+        return { ...prev, categories: undefined };
+      }
+      return prev;
+    });
+  }, []);
 
   // Validate form
   const validate = (): boolean => {
     const newErrors: ValidationErrors = {};
 
-    if (!formData.name?.trim()) {
+    if (!nameRef.current?.trim()) {
       newErrors.name = 'Name is required';
     }
 
-    if (!formData.description?.trim()) {
+    if (!descriptionRef.current?.trim()) {
       newErrors.description = 'Description is required';
     }
 
@@ -177,8 +238,8 @@ export default function NewChallengeScreen() {
     const submitData = new FormData();
 
     // Add all text fields
-    if (formData.name) submitData.append('name', formData.name);
-    if (formData.description) submitData.append('description', formData.description);
+    if (nameRef.current) submitData.append('name', nameRef.current);
+    if (descriptionRef.current) submitData.append('description', descriptionRef.current);
     if (formData.icon) submitData.append('icon', formData.icon);
     if (formData.color) submitData.append('color', formData.color);
     if (formData.type) submitData.append('type', formData.type);
@@ -239,30 +300,29 @@ export default function NewChallengeScreen() {
             <View className="mb-4">
               <Text className="mb-2 text-base font-medium text-gray-700">Name of Challenge *</Text>
               <TextInput
-                value={formData.name || ''}
-                onChangeText={(text) => updateField('name', text)}
+                key={`name-${inputKey}`}
+                defaultValue={nameRef.current}
+                onChangeText={(text) => {
+                  nameRef.current = text;
+                }}
                 placeholder="Give your challenge a catchy name"
-                className="h-12 rounded-lg border border-gray-300 px-4"
+                style={{
+                  height: 48,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: '#D1D5DB',
+                  paddingHorizontal: 16,
+                }}
               />
               {errors.name && <Text className="text-red-500 mt-1 text-sm">{errors.name}</Text>}
             </View>
 
             {/* Description */}
-            <View className="mb-4">
-              <Text className="mb-2 text-base font-medium text-gray-700">Description *</Text>
-              <TextInput
-                value={formData.description || ''}
-                onChangeText={(text) => updateField('description', text)}
-                placeholder="Share a short description of what this challenge is all about"
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-                className="rounded-lg border border-gray-300 p-4"
-              />
-              {errors.description && (
-                <Text className="text-red-500 mt-1 text-sm">{errors.description}</Text>
-              )}
-            </View>
+            <DescriptionField
+              descriptionRef={descriptionRef}
+              error={errors.description}
+              inputKey={inputKey}
+            />
 
             {/* Categories */}
             <View className="mb-4">

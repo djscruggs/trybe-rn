@@ -66,11 +66,9 @@ export default function SignInPage() {
     } catch (err: any) {
       // Handle session already exists - user is already signed in, just redirect
       if (err?.errors?.[0]?.code === 'session_exists') {
-        console.log('Session already exists, redirecting to home');
-        router.replace('/');
         return;
       }
-      
+
       // If user not found in Clerk (form_identifier_not_found), try database login
       if (err?.errors?.[0]?.code === 'form_identifier_not_found') {
         console.log('User not found in Clerk, trying database login...');
@@ -99,7 +97,7 @@ export default function SignInPage() {
           return;
         }
       }
-      
+
       // Log other errors for debugging
       console.error('Sign in error:', JSON.stringify(err, null, 2));
       Alert.alert('Sign In Error', err?.message || 'An error occurred during sign in');

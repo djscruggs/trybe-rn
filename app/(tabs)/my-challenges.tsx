@@ -10,7 +10,7 @@ import { useCurrentUser } from '~/contexts/currentuser-context';
 const ROOT_STYLE: ViewStyle = { flex: 1 };
 
 export default function MyChallenges() {
-  console.log('🏆 MyChallenges: Component rendering');
+
 
   const { getToken, currentUser } = useCurrentUser();
 
@@ -26,7 +26,7 @@ export default function MyChallenges() {
 
   // Ensure data is an array before mapping
   const challenges = Array.isArray(data) ? data : [];
-  
+
   return (
     <View style={ROOT_STYLE} className="bg-white">
       <Stack.Screen options={{ title: 'My Challenges' }} />

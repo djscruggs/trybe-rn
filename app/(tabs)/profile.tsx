@@ -46,7 +46,6 @@ export default function Profile() {
   }, [user]);
 
   const afterSignOut = () => {
-    console.log('afterSignOut');
     setCurrentUser(null);
     router.push('/');
   };

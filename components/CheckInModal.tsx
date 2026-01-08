@@ -7,7 +7,7 @@ import {
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { forwardRef, useMemo, useState } from 'react';
+import { forwardRef, useMemo, useState, memo, useRef } from 'react';
 import { View, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import Toast from 'react-native-toast-message';
 
@@ -23,13 +23,14 @@ interface CheckInModalProps {
   cohortId?: number | null;
 }
 
-export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
+const CheckInModalComponent = forwardRef<BottomSheetModal, CheckInModalProps>(
   ({ onCheckInComplete, challengeId, cohortId }, ref) => {
     const { currentUser } = useCurrentUser();
     const queryClient = useQueryClient();
-    const [body, setBody] = useState('');
+    const bodyRef = useRef('');
     const [image, setImage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [inputKey, setInputKey] = useState(0);
 
     const snapPoints = useMemo(() => ['75%'], []);
 
@@ -74,7 +75,7 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
 
       try {
         const formData = new FormData();
-        formData.append('body', body);
+        formData.append('body', bodyRef.current);
         formData.append('userId', String(currentUser.id));
         formData.append('challengeId', String(challengeId));
 
@@ -136,8 +137,9 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
           text2: 'Check-in completed successfully',
         });
 
-        setBody('');
+        bodyRef.current = '';
         setImage(null);
+        setInputKey(prev => prev + 1); // Reset input
 
         // Call callback to notify parent component
         if (onCheckInComplete && responseData.checkIn) {
@@ -161,8 +163,9 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
     };
 
     const handleDismiss = () => {
-      setBody('');
+      bodyRef.current = '';
       setImage(null);
+      setInputKey(prev => prev + 1); // Force re-mount of input
     };
 
     return (
@@ -178,13 +181,24 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
             <View className="mb-4">
               <Text className="mb-2 text-base font-semibold">How did it go?</Text>
               <BottomSheetTextInput
-                value={body}
-                onChangeText={setBody}
+                key={`body-input-${inputKey}`}
+                defaultValue={bodyRef.current}
+                onChangeText={(text) => {
+                  bodyRef.current = text;
+                }}
                 placeholder="Share your progress, thoughts, or achievements..."
                 multiline
                 numberOfLines={4}
-                className="min-h-24 rounded-lg border border-gray-300 bg-white p-3 text-base"
-                textAlignVertical="top"
+                style={{
+                  minHeight: 96,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: '#D1D5DB',
+                  backgroundColor: 'white',
+                  padding: 12,
+                  fontSize: 16,
+                  textAlignVertical: 'top',
+                }}
               />
             </View>
 
@@ -232,4 +246,6 @@ export const CheckInModal = forwardRef<BottomSheetModal, CheckInModalProps>(
   }
 );
 
-CheckInModal.displayName = 'CheckInModal';
+CheckInModalComponent.displayName = 'CheckInModal';
+
+export const CheckInModal = memo(CheckInModalComponent);
