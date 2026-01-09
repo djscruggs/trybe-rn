@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { View, ScrollView, ActivityIndicator } from 'react-native';
+import { View, ScrollView, ActivityIndicator, Image } from 'react-native';
 
 import { ProgressChart } from '~/components/ProgressChart';
 import { Text } from '~/components/nativewindui/Text';
@@ -84,35 +84,34 @@ export default function ChallengeProgress() {
             <Text className="text-center text-gray-500">No check-ins yet</Text>
           </View>
         ) : (
-          <View className="rounded-lg border border-gray-200 bg-white">
-            <View className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-              <View className="flex-row">
-                <View className="flex-1">
-                  <Text className="text-xs font-semibold uppercase text-gray-600">Date</Text>
-                </View>
-                <View className="flex-2">
-                  <Text className="text-xs font-semibold uppercase text-gray-600">Note</Text>
-                </View>
-              </View>
-            </View>
+          <View className="gap-4">
             {sortedCheckIns.map((checkIn: CheckIn, index: number) => (
               <View
                 key={checkIn.id}
-                className={`border-b border-gray-100 px-4 py-3 ${index === sortedCheckIns.length - 1 ? 'border-b-0' : ''}`}>
-                <View className="flex-row">
-                  <View className="flex-1">
-                    <Text className="text-sm text-gray-900">
-                      {formatCheckInDate(checkIn.createdAt)}
+                className="rounded-lg border border-gray-200 bg-white p-4">
+                <View className="mb-2">
+                  <Text className="text-xs font-semibold uppercase text-gray-500">
+                    {formatCheckInDate(checkIn.createdAt)}
+                  </Text>
+                </View>
+                <View>
+                  {checkIn.body && (
+                    <Text className="mb-3 text-base leading-relaxed text-gray-900">
+                      {checkIn.body}
                     </Text>
-                  </View>
-                  <View className="flex-2">
-                    <Text className="text-sm text-gray-700" numberOfLines={2}>
-                      {checkIn.body || '—'}
-                    </Text>
-                    {(checkIn.imageMeta || checkIn.videoMeta) && (
-                      <Text className="mt-1 text-xs text-gray-500">📷 Media</Text>
-                    )}
-                  </View>
+                  )}
+                  {checkIn.imageMeta?.secure_url && (
+                    <Image
+                      source={{ uri: checkIn.imageMeta.secure_url }}
+                      className="h-48 w-full rounded-lg"
+                      resizeMode="cover"
+                    />
+                  )}
+                  {checkIn.videoMeta?.secure_url && (
+                    <View className="mt-3 flex-row items-center rounded-lg bg-gray-100 p-4">
+                      <Text className="text-sm text-gray-700">🎥 Video: {checkIn.videoMeta.secure_url}</Text>
+                    </View>
+                  )}
                 </View>
               </View>
             ))}

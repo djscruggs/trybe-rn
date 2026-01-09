@@ -7,6 +7,7 @@ import { Text } from '~/components/nativewindui/Text';
 import { iconMap, calculateDuration } from '~/lib/helpers';
 import { ChallengeSummary } from '~/lib/types';
 import { CheckInModal } from '~/components/CheckInModal';
+import { useCurrentUser } from '~/contexts/currentuser-context';
 
 interface ChallengeListItemProps {
   challenge: ChallengeSummary;
@@ -15,6 +16,7 @@ interface ChallengeListItemProps {
 
 export function ChallengeListItem({ challenge, onPress }: ChallengeListItemProps) {
   const router = useRouter();
+  const { currentUser } = useCurrentUser();
   const duration = calculateDuration(challenge);
   const displayDuration = typeof duration === 'number' ? `${duration} days` : duration;
   const category = challenge.categories?.[0]?.name;
@@ -61,7 +63,7 @@ export function ChallengeListItem({ challenge, onPress }: ChallengeListItemProps
           )}
         </View>
       </View>
-      {challenge.isMember && (
+      {challenge.isMember && currentUser?.id && (
         <>
           <TouchableOpacity
             onPress={handleCheckIn}
@@ -73,6 +75,7 @@ export function ChallengeListItem({ challenge, onPress }: ChallengeListItemProps
             ref={checkInModalRef}
             challengeId={challenge.id}
             cohortId={null}
+            userId={currentUser.id}
             onCheckInComplete={handleCheckInComplete}
           />
         </>

@@ -21,10 +21,11 @@ interface CheckInModalProps {
   onCheckInComplete?: (checkIn: CheckIn) => void;
   challengeId: string | number;
   cohortId?: number | null;
+  userId?: number | string; // Optional: pass userId directly to avoid context timing issues
 }
 
 const CheckInModalComponent = forwardRef<BottomSheetModal, CheckInModalProps>(
-  ({ onCheckInComplete, challengeId, cohortId }, ref) => {
+  ({ onCheckInComplete, challengeId, cohortId, userId: propUserId }, ref) => {
     const { currentUser } = useCurrentUser();
     const queryClient = useQueryClient();
     const bodyRef = useRef('');
@@ -61,8 +62,27 @@ const CheckInModalComponent = forwardRef<BottomSheetModal, CheckInModalProps>(
     };
 
     const handleSubmit = async () => {
-      if (!currentUser?.id || !challengeId) {
-        Alert.alert('Error', 'Unable to check in. Please try again.');
+      // Use propUserId if available, otherwise fall back to currentUser.id
+      const userId = propUserId || currentUser?.id;
+
+      // Debug logging
+      console.log('CheckInModal - handleSubmit called');
+      console.log('currentUser:', currentUser);
+      console.log('currentUser.id:', currentUser?.id);
+      console.log('propUserId:', propUserId);
+      console.log('resolved userId:', userId);
+      console.log('challengeId:', challengeId);
+
+      if (!userId || !challengeId) {
+        const missingFields = [];
+        if (!userId) missingFields.push('userId');
+        if (!challengeId) missingFields.push('challengeId');
+
+        console.error('Missing required fields:', missingFields.join(', '));
+        Alert.alert(
+          'Error',
+          `Unable to check in. Missing: ${missingFields.join(', ')}. Please try again.`
+        );
         return;
       }
 
@@ -76,7 +96,7 @@ const CheckInModalComponent = forwardRef<BottomSheetModal, CheckInModalProps>(
       try {
         const formData = new FormData();
         formData.append('body', bodyRef.current);
-        formData.append('userId', String(currentUser.id));
+        formData.append('userId', String(userId));
         formData.append('challengeId', String(challengeId));
 
         if (cohortId) {
@@ -97,7 +117,7 @@ const CheckInModalComponent = forwardRef<BottomSheetModal, CheckInModalProps>(
         }
 
         const headers = {
-          Authorization: `Bearer ${currentUser.id}`,
+          Authorization: `Bearer ${userId}`,
         };
 
         const url = `${API_HOST}/api/challenges/${challengeId}/checkins`;
@@ -212,8 +232,8 @@ const CheckInModalComponent = forwardRef<BottomSheetModal, CheckInModalProps>(
                   />
                   <TouchableOpacity
                     onPress={removeImage}
-                    className="absolute right-2 top-2 rounded-full bg-red p-2">
-                    <Text className="text-white">×</Text>
+                    className="absolute right-2 top-2 h-8 w-8 items-center justify-center rounded-full bg-red">
+                    <Text className="text-xl font-bold text-white">×</Text>
                   </TouchableOpacity>
                 </View>
               ) : (

@@ -41,7 +41,15 @@ export default function SignUpPage() {
 
   // Redirect to home if already signed in
   useEffect(() => {
+    console.log('🔐 Sign-up page auth state:', {
+      isLoaded,
+      isSignedIn,
+      hasCurrentUser: !!currentUser,
+      shouldRedirect: isLoaded && isSignedIn && currentUser,
+    });
+
     if (isLoaded && isSignedIn && currentUser) {
+      console.log('✅ User is fully authenticated, redirecting to home');
       router.replace('/');
     }
   }, [isLoaded, isSignedIn, currentUser]);

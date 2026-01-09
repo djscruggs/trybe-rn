@@ -36,6 +36,20 @@ Sentry.init({
 // Initialize Sentry as early as possible
 initSentry();
 
+// Suppress RTIInputSystemClient warnings in iOS simulator (development only)
+if (__DEV__) {
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('RTIInputSystemClient')
+    ) {
+      return;
+    }
+    originalWarn(...args);
+  };
+}
+
 const queryClient = new QueryClient();
 
 export default Sentry.wrap(function RootLayout() {

@@ -91,11 +91,12 @@ export default function ChallengeLayout() {
               <Slot />
             </View>
             {/* Auto check-in prompt modal */}
-            {membership && challenge && (
+            {membership && challenge && currentUser?.id && (
               <CheckInModal
                 ref={checkInModalRef}
                 challengeId={challenge.id}
                 cohortId={membership.cohortId}
+                userId={currentUser.id}
                 onCheckInComplete={handleCheckInComplete}
               />
             )}
@@ -133,6 +134,7 @@ const ChallengeDetailNavigation = ({ challenge }: { challenge: Challenge }) => {
 
 const CheckInButton = () => {
   const { membership, challenge } = useMemberContext();
+  const { currentUser } = useCurrentUser();
   const router = useRouter();
   const checkInModalRef = useRef<BottomSheetModal>(null);
 
@@ -142,7 +144,7 @@ const CheckInButton = () => {
     router.push(`/challenges/${challenge.id}/progress`);
   }, [challenge?.id, router]);
 
-  if (!membership || !challenge) return null;
+  if (!membership || !challenge || !currentUser?.id) return null;
 
   return (
     <>
@@ -155,6 +157,7 @@ const CheckInButton = () => {
         ref={checkInModalRef}
         challengeId={challenge.id}
         cohortId={membership.cohortId}
+        userId={currentUser.id}
         onCheckInComplete={handleCheckInComplete}
       />
     </>
