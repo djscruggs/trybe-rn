@@ -29,7 +29,8 @@
           "project": "trybe-rn",
           "organization": "dj-scruggs"
         }
-      ]
+      ],
+      "./plugins/withFixPodScriptPhase.js"
     ],
     "experiments": {
       "typedRoutes": true,
