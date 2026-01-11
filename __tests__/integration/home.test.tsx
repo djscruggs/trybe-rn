@@ -1,14 +1,9 @@
 import React from 'react';
 import { render, waitFor, screen, fireEvent } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Home from '~/app/(tabs)/index';
 import { challengesApi } from '~/lib/api/challengesApi';
-
-// Mock TanStack Query useQuery hook
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQuery: jest.fn(),
-}));
+import type { ChallengeSummary } from '~/lib/types';
 
 // Mock the challengesApi
 jest.mock('~/lib/api/challengesApi', () => ({
@@ -18,33 +13,49 @@ jest.mock('~/lib/api/challengesApi', () => ({
 }));
 
 // Mock CurrentUserContext
-const mockGetToken = jest.fn().mockResolvedValue(null);
-const mockUseCurrentUser = jest.fn(() => ({
-  currentUser: null,
-  getToken: mockGetToken,
-}));
+let mockGetToken: jest.Mock;
+let mockUseCurrentUser: jest.Mock;
+
+// Factory function for creating fresh mocks
+const createMockUseCurrentUser = () => {
+  mockGetToken = jest.fn().mockResolvedValue(null);
+  return jest.fn(() => ({
+    currentUser: null,
+    getToken: mockGetToken,
+  }));
+};
 
 jest.mock('~/contexts/currentuser-context', () => ({
   useCurrentUser: () => mockUseCurrentUser(),
 }));
 
 // Mock AuthSheet context
-const mockOpenSignUp = jest.fn();
-const mockOpenSignIn = jest.fn();
+let mockOpenSignUp: jest.Mock;
+let mockOpenSignIn: jest.Mock;
 
-jest.mock('~/contexts/auth-sheet-context', () => ({
-  useAuthSheet: () => ({
+const createMockAuthSheet = () => {
+  mockOpenSignUp = jest.fn();
+  mockOpenSignIn = jest.fn();
+  return {
     openSignUp: mockOpenSignUp,
     openSignIn: mockOpenSignIn,
-  }),
+  };
+};
+
+jest.mock('~/contexts/auth-sheet-context', () => ({
+  useAuthSheet: () => createMockAuthSheet(),
 }));
 
 // Mock Clerk
-const mockUseAuth = jest.fn(() => ({
-  isSignedIn: false,
-  userId: null,
-  getToken: jest.fn(),
-}));
+let mockUseAuth: jest.Mock;
+
+const createMockUseAuth = () => {
+  return jest.fn(() => ({
+    isSignedIn: false,
+    userId: null,
+    getToken: jest.fn(),
+  }));
+};
 
 jest.mock('@clerk/clerk-expo', () => ({
   useAuth: () => mockUseAuth(),
@@ -60,6 +71,45 @@ jest.mock('~/lib/logger', () => ({
   },
 }));
 
+// Create a complete mock challenge with all required fields
+const createMockChallenge = (overrides?: Partial<ChallengeSummary>): ChallengeSummary => ({
+  id: 1,
+  name: 'Test Challenge',
+  description: 'A test challenge description',
+  mission: 'Test mission',
+  startAt: new Date('2024-01-01'),
+  endAt: new Date('2024-01-31'),
+  numDays: 30,
+  type: 'SCHEDULED' as const,
+  status: 'PUBLISHED' as const,
+  frequency: 'DAILY' as const,
+  coverPhotoMeta: {
+    url: 'https://example.com/image.jpg',
+    secure_url: 'https://example.com/image.jpg',
+    public_id: 'test-image',
+    format: 'jpg',
+    resource_type: 'image',
+  },
+  videoMeta: null,
+  icon: null,
+  color: '#FF5733',
+  categories: [],
+  reminders: true,
+  syncCalendar: false,
+  publishAt: new Date('2024-01-01'),
+  published: true,
+  public: true,
+  userId: 1,
+  likeCount: 0,
+  commentCount: 0,
+  _count: {
+    members: 10,
+    likes: 5,
+    comments: 3,
+  },
+  ...overrides,
+});
+
 describe('Home Screen', () => {
   let queryClient: QueryClient;
 
@@ -72,6 +122,13 @@ describe('Home Screen', () => {
       },
     });
     queryClient.clear();
+
+    // Reset all mocks using factory functions
+    mockUseCurrentUser = createMockUseCurrentUser();
+    mockUseAuth = createMockUseAuth();
+    mockOpenSignUp = jest.fn();
+    mockOpenSignIn = jest.fn();
+
     jest.clearAllMocks();
   });
 
@@ -79,12 +136,8 @@ describe('Home Screen', () => {
     queryClient.clear();
   });
 
-  it('renders welcome header and About Us button', () => {
-    (useQuery as jest.Mock).mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-    });
+  it('renders welcome header and About Us button', async () => {
+    (challengesApi.getActive as jest.Mock).mockResolvedValue([]);
 
     const { getByText } = render(
       <QueryClientProvider client={queryClient}>
@@ -92,18 +145,19 @@ describe('Home Screen', () => {
       </QueryClientProvider>
     );
 
-    expect(getByText('WELCOME TO')).toBeTruthy();
-    expect(getByText('Trybe')).toBeTruthy();
-    expect(getByText('(BETA)')).toBeTruthy();
-    expect(getByText('About Us')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText('WELCOME TO')).toBeTruthy();
+      expect(getByText('Trybe')).toBeTruthy();
+      expect(getByText('(BETA)')).toBeTruthy();
+      expect(getByText('About Us')).toBeTruthy();
+    });
   });
 
   it('shows loading state while fetching challenges', async () => {
-    (useQuery as jest.Mock).mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      error: null,
-    });
+    // Mock a delayed response to simulate loading
+    (challengesApi.getActive as jest.Mock).mockImplementation(
+      () => new Promise(resolve => setTimeout(() => resolve([]), 100))
+    );
 
     const { getByText } = render(
       <QueryClientProvider client={queryClient}>
@@ -115,20 +169,15 @@ describe('Home Screen', () => {
   });
 
   it('displays challenges when loaded successfully', async () => {
-    const mockChallenges = [
-      {
-        id: '1',
+    const mockChallenges: ChallengeSummary[] = [
+      createMockChallenge({
+        id: 1,
         name: 'Test Challenge',
         description: 'A test challenge',
-        imageUrl: 'https://example.com/image.jpg',
-      },
+      }),
     ];
 
-    (useQuery as jest.Mock).mockReturnValue({
-      data: mockChallenges,
-      isLoading: false,
-      error: null,
-    });
+    (challengesApi.getActive as jest.Mock).mockResolvedValue(mockChallenges);
 
     const { getByText } = render(
       <QueryClientProvider client={queryClient}>
@@ -142,11 +191,7 @@ describe('Home Screen', () => {
   });
 
   it('displays sign up prompt when user is not signed in', async () => {
-    (useQuery as jest.Mock).mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-    });
+    (challengesApi.getActive as jest.Mock).mockResolvedValue([]);
 
     const { getByText } = render(
       <QueryClientProvider client={queryClient}>
@@ -159,12 +204,8 @@ describe('Home Screen', () => {
     });
   });
 
-  it('displays feedback section', () => {
-    (useQuery as jest.Mock).mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-    });
+  it('displays feedback section', async () => {
+    (challengesApi.getActive as jest.Mock).mockResolvedValue([]);
 
     const { getByText } = render(
       <QueryClientProvider client={queryClient}>
@@ -172,16 +213,16 @@ describe('Home Screen', () => {
       </QueryClientProvider>
     );
 
-    expect(getByText("How's Your Experience?")).toBeTruthy();
-    expect(getByText('Leave Us Your Feedback!')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText("How's Your Experience?")).toBeTruthy();
+      expect(getByText('Leave Us Your Feedback!')).toBeTruthy();
+    });
   });
 
   it('handles error state gracefully', async () => {
-    (useQuery as jest.Mock).mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: new Error('Failed to fetch challenges'),
-    });
+    (challengesApi.getActive as jest.Mock).mockRejectedValue(
+      new Error('Failed to fetch challenges')
+    );
 
     const { getByText } = render(
       <QueryClientProvider client={queryClient}>
@@ -203,17 +244,17 @@ describe('Home Screen', () => {
         back: jest.fn(),
       });
 
-      (useQuery as jest.Mock).mockReturnValue({
-        data: [],
-        isLoading: false,
-        error: null,
-      });
+      (challengesApi.getActive as jest.Mock).mockResolvedValue([]);
 
       const { getByText } = render(
         <QueryClientProvider client={queryClient}>
           <Home />
         </QueryClientProvider>
       );
+
+      await waitFor(() => {
+        expect(getByText('About Us')).toBeTruthy();
+      });
 
       const aboutButton = getByText('About Us');
       fireEvent.press(aboutButton);
@@ -222,27 +263,20 @@ describe('Home Screen', () => {
     });
 
     it('opens sign up sheet when challenge is clicked while signed out', async () => {
-      mockOpenSignUp.mockClear();
       mockUseAuth.mockReturnValue({
         isSignedIn: false,
         userId: null,
         getToken: jest.fn(),
       });
 
-      const mockChallenges = [
-        {
-          id: '1',
+      const mockChallenges: ChallengeSummary[] = [
+        createMockChallenge({
+          id: 1,
           name: 'Test Challenge',
-          description: 'A test challenge',
-          imageUrl: 'https://example.com/image.jpg',
-        },
+        }),
       ];
 
-      (useQuery as jest.Mock).mockReturnValue({
-        data: mockChallenges,
-        isLoading: false,
-        error: null,
-      });
+      (challengesApi.getActive as jest.Mock).mockResolvedValue(mockChallenges);
 
       const { getByText } = render(
         <QueryClientProvider client={queryClient}>
@@ -274,20 +308,14 @@ describe('Home Screen', () => {
         getToken: jest.fn(),
       });
 
-      const mockChallenges = [
-        {
-          id: '1',
+      const mockChallenges: ChallengeSummary[] = [
+        createMockChallenge({
+          id: 1,
           name: 'Test Challenge',
-          description: 'A test challenge',
-          imageUrl: 'https://example.com/image.jpg',
-        },
+        }),
       ];
 
-      (useQuery as jest.Mock).mockReturnValue({
-        data: mockChallenges,
-        isLoading: false,
-        error: null,
-      });
+      (challengesApi.getActive as jest.Mock).mockResolvedValue(mockChallenges);
 
       const { getByText } = render(
         <QueryClientProvider client={queryClient}>
@@ -302,7 +330,7 @@ describe('Home Screen', () => {
       const challengeItem = getByText('Test Challenge');
       fireEvent.press(challengeItem);
 
-      expect(mockPush).toHaveBeenCalledWith('challenges/1/about');
+      expect(mockPush).toHaveBeenCalledWith(`challenges/${mockChallenges[0].id}/about`);
     });
   });
 
@@ -314,26 +342,20 @@ describe('Home Screen', () => {
         getToken: jest.fn().mockResolvedValue('test-token'),
       });
 
-      const mockChallenges = [
-        {
-          id: '1',
+      const mockChallenges: ChallengeSummary[] = [
+        createMockChallenge({
+          id: 1,
           name: 'Challenge One',
           description: 'First challenge',
-          imageUrl: 'https://example.com/image1.jpg',
-        },
-        {
-          id: '2',
+        }),
+        createMockChallenge({
+          id: 2,
           name: 'Challenge Two',
           description: 'Second challenge',
-          imageUrl: 'https://example.com/image2.jpg',
-        },
+        }),
       ];
 
-      (useQuery as jest.Mock).mockReturnValue({
-        data: mockChallenges,
-        isLoading: false,
-        error: null,
-      });
+      (challengesApi.getActive as jest.Mock).mockResolvedValue(mockChallenges);
 
       const { getByText, queryByText } = render(
         <QueryClientProvider client={queryClient}>
@@ -359,20 +381,14 @@ describe('Home Screen', () => {
         getToken: jest.fn().mockResolvedValue(mockToken),
       });
 
-      const mockChallenges = [
-        {
-          id: '1',
+      const mockChallenges: ChallengeSummary[] = [
+        createMockChallenge({
+          id: 1,
           name: 'Test Challenge',
-          description: 'A test challenge',
-          imageUrl: 'https://example.com/image.jpg',
-        },
+        }),
       ];
 
-      (useQuery as jest.Mock).mockReturnValue({
-        data: mockChallenges,
-        isLoading: false,
-        error: null,
-      });
+      (challengesApi.getActive as jest.Mock).mockResolvedValue(mockChallenges);
 
       const { getByText } = render(
         <QueryClientProvider client={queryClient}>

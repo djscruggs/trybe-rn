@@ -1,10 +1,6 @@
-import axios from 'axios';
 import { challengesApi } from '~/lib/api/challengesApi';
 import { API_HOST } from '~/lib/environment';
-
-// Mock axios
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+import type { ChallengeSummary, Challenge, MemberChallenge, CheckIn } from '~/lib/types';
 
 // Mock environment
 jest.mock('~/lib/environment', () => ({
@@ -21,6 +17,122 @@ jest.mock('~/lib/api/client', () => ({
 
 import { apiClient } from '~/lib/api/client';
 
+// Helper to create complete mock challenges
+const createMockChallengeSummary = (overrides?: Partial<ChallengeSummary>): ChallengeSummary => ({
+  id: 1,
+  name: 'Test Challenge',
+  description: 'A test challenge description',
+  mission: 'Test mission',
+  startAt: new Date('2024-01-01'),
+  endAt: new Date('2024-01-31'),
+  numDays: 30,
+  type: 'SCHEDULED' as const,
+  status: 'PUBLISHED' as const,
+  frequency: 'DAILY' as const,
+  coverPhotoMeta: {
+    url: 'https://example.com/image.jpg',
+    secure_url: 'https://example.com/image.jpg',
+    public_id: 'test-image',
+    format: 'jpg',
+    resource_type: 'image',
+  },
+  videoMeta: null,
+  icon: null,
+  color: '#FF5733',
+  categories: [],
+  reminders: true,
+  syncCalendar: false,
+  publishAt: new Date('2024-01-01'),
+  published: true,
+  public: true,
+  userId: 1,
+  likeCount: 0,
+  commentCount: 0,
+  _count: {
+    members: 10,
+    likes: 5,
+    comments: 3,
+  },
+  ...overrides,
+});
+
+const createMockChallenge = (overrides?: Partial<Challenge>): Challenge => ({
+  id: 1,
+  name: 'Test Challenge',
+  description: 'A test challenge description',
+  mission: 'Test mission',
+  startAt: new Date('2024-01-01'),
+  endAt: new Date('2024-01-31'),
+  numDays: 30,
+  type: 'SCHEDULED' as const,
+  status: 'PUBLISHED' as const,
+  frequency: 'DAILY' as const,
+  coverPhotoMeta: {
+    url: 'https://example.com/image.jpg',
+    secure_url: 'https://example.com/image.jpg',
+    public_id: 'test-image',
+    format: 'jpg',
+    resource_type: 'image',
+  },
+  videoMeta: null,
+  icon: null,
+  color: '#FF5733',
+  categories: [],
+  reminders: true,
+  syncCalendar: false,
+  publishAt: new Date('2024-01-01'),
+  published: true,
+  public: true,
+  userId: 1,
+  likeCount: 0,
+  commentCount: 0,
+  ...overrides,
+});
+
+const createMockMembership = (overrides?: Partial<MemberChallenge>): MemberChallenge => ({
+  id: 1,
+  userId: 1,
+  challengeId: 1,
+  cohortId: undefined,
+  user: {
+    id: 1,
+    email: 'test@example.com',
+    profile: {
+      id: 1,
+      userId: 1,
+      firstName: 'Test',
+      lastName: 'User',
+      fullName: 'Test User',
+      profileImage: null,
+    },
+    lastLogin: null,
+  },
+  challenge: createMockChallenge(),
+  lastCheckIn: null,
+  nextCheckIn: null,
+  dayNumber: 1,
+  notificationHour: null,
+  notificationMinute: null,
+  startAt: new Date('2024-01-01'),
+  createdAt: new Date('2024-01-01'),
+  ...overrides,
+});
+
+const createMockCheckIn = (overrides?: Partial<CheckIn>): CheckIn => ({
+  id: 1,
+  userId: 1,
+  challengeId: 1,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  data: null,
+  body: 'Test check-in',
+  imageMeta: null,
+  videoMeta: null,
+  likeCount: 0,
+  commentCount: 0,
+  ...overrides,
+});
+
 describe('Challenges API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,9 +140,9 @@ describe('Challenges API', () => {
 
   describe('getActive', () => {
     it('fetches active challenges without token', async () => {
-      const mockChallenges = [
-        { id: '1', name: 'Challenge 1' },
-        { id: '2', name: 'Challenge 2' },
+      const mockChallenges: ChallengeSummary[] = [
+        createMockChallengeSummary({ id: 1, name: 'Challenge 1' }),
+        createMockChallengeSummary({ id: 2, name: 'Challenge 2' }),
       ];
 
       (apiClient.get as jest.Mock).mockResolvedValue({
@@ -47,7 +159,9 @@ describe('Challenges API', () => {
     });
 
     it('fetches active challenges with token', async () => {
-      const mockChallenges = [{ id: '1', name: 'Challenge 1' }];
+      const mockChallenges: ChallengeSummary[] = [
+        createMockChallengeSummary({ id: 1, name: 'Challenge 1' }),
+      ];
       const token = 'test-token';
 
       (apiClient.get as jest.Mock).mockResolvedValue({
@@ -76,7 +190,11 @@ describe('Challenges API', () => {
 
   describe('get', () => {
     it('fetches a single challenge by id', async () => {
-      const mockChallenge = { id: '1', name: 'Challenge 1', description: 'Test' };
+      const mockChallenge = createMockChallenge({
+        id: 1,
+        name: 'Challenge 1',
+        description: 'Test',
+      });
 
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: mockChallenge,
@@ -108,7 +226,11 @@ describe('Challenges API', () => {
 
   describe('getMembership', () => {
     it('fetches user membership for a challenge', async () => {
-      const mockMembership = { id: '1', userId: 'user1', challengeId: 'challenge1' };
+      const mockMembership = createMockMembership({
+        id: 1,
+        userId: 1,
+        challengeId: 1,
+      });
       const token = 'test-token';
 
       (apiClient.get as jest.Mock).mockResolvedValue({
@@ -127,9 +249,9 @@ describe('Challenges API', () => {
 
   describe('getCheckIns', () => {
     it('fetches check-ins with token', async () => {
-      const mockCheckIns = [
-        { id: '1', date: '2024-01-01' },
-        { id: '2', date: '2024-01-02' },
+      const mockCheckIns: CheckIn[] = [
+        createMockCheckIn({ id: 1, createdAt: new Date('2024-01-01') }),
+        createMockCheckIn({ id: 2, createdAt: new Date('2024-01-02') }),
       ];
       const token = 'test-token';
 
@@ -147,7 +269,9 @@ describe('Challenges API', () => {
     });
 
     it('fetches check-ins with cohort id', async () => {
-      const mockCheckIns = [{ id: '1', date: '2024-01-01' }];
+      const mockCheckIns: CheckIn[] = [
+        createMockCheckIn({ id: 1, createdAt: new Date('2024-01-01') }),
+      ];
       const token = 'test-token';
 
       (apiClient.get as jest.Mock).mockResolvedValue({

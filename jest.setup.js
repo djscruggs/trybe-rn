@@ -30,6 +30,8 @@ jest.mock('expo-secure-store', () => ({
 }));
 
 // Mock Clerk
+// Note: Individual tests can override these mocks using factory functions
+// in their beforeEach blocks for test isolation
 jest.mock('@clerk/clerk-expo', () => ({
   ClerkProvider: ({ children }) => children,
   ClerkLoaded: ({ children }) => children,
