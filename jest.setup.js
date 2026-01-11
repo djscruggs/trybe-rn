@@ -1,8 +1,11 @@
 // Mock React Native Platform
+// Note: To test both iOS and Android behaviors, use Platform.OS = 'android' in specific test suites
 global.Platform = {
   OS: 'ios',
   Version: '16.0',
   select: jest.fn((obj) => obj.ios || obj.default),
+  isPad: false,
+  isTV: false,
 };
 
 // Mock expo-router
@@ -122,4 +125,4 @@ jest.mock('react-native-toast-message', () => ({
 }));
 
 // Global test timeout
-jest.setTimeout(10000);
+jest.setTimeout(5000);

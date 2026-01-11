@@ -24,6 +24,15 @@ npm run test:watch
 
 # Generate coverage report
 npm run test:coverage
+
+# Run a specific test file
+npm test -- home.test
+
+# Run tests matching a pattern
+npm test -- --testNamePattern="Navigation"
+
+# Run tests with verbose output
+npm test -- --verbose
 ```
 
 ## Test Coverage
@@ -130,13 +139,73 @@ describe('Your API', () => {
 
 ## Known Issues
 
-- Some async operations may not exit gracefully (use `--forceExit` flag)
-- React Testing Library may show warnings about updates not wrapped in `act()` - these are expected for async queries
+- Some async operations may not exit gracefully
+  - **Solution**: Run tests with `npm test -- --forceExit` if needed
+- React Testing Library may show warnings about updates not wrapped in `act()`
+  - These are expected for async queries and should be addressed by wrapping async assertions in `waitFor()`
+  - All async state updates should use `waitFor()` from `@testing-library/react-native`
+
+## Troubleshooting
+
+### Tests Hanging or Not Exiting
+If tests complete but Jest doesn't exit:
+```bash
+npm test -- --forceExit
+```
+
+### Act Warnings
+If you see warnings about updates not wrapped in `act()`:
+```typescript
+// ❌ Bad
+const { getByText } = render(<Component />);
+expect(getByText('Loading...')).toBeTruthy();
+
+// ✅ Good
+const { getByText } = render(<Component />);
+await waitFor(() => {
+  expect(getByText('Loading...')).toBeTruthy();
+});
+```
+
+### Mock Not Working
+Ensure mocks are defined before imports:
+```typescript
+// ✅ Correct order
+jest.mock('~/lib/api/client');
+import { apiClient } from '~/lib/api/client';
+
+// ❌ Wrong order
+import { apiClient } from '~/lib/api/client';
+jest.mock('~/lib/api/client');
+```
+
+### Query Cache Issues
+Always clear the query cache between tests:
+```typescript
+beforeEach(() => {
+  queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  queryClient.clear();
+});
+
+afterEach(() => {
+  queryClient.clear();
+});
+```
+
+### Test Timeout Errors
+If tests timeout, increase the timeout for specific tests:
+```typescript
+it('slow test', async () => {
+  // test code
+}, 10000); // 10 second timeout
+```
 
 ## Test Statistics
 
 - **Total Test Suites**: 3
-- **Total Tests**: 22
+- **Total Tests**: 22+ (expanded with navigation and auth tests)
 - **Pass Rate**: 100%
 
 ## Dependencies

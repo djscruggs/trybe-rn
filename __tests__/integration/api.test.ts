@@ -173,4 +173,64 @@ describe('Challenges API', () => {
       expect(result).toEqual([]);
     });
   });
+
+  describe('Error Handling', () => {
+    it('handles network errors gracefully', async () => {
+      (apiClient.get as jest.Mock).mockRejectedValue(
+        new Error('Network request failed')
+      );
+
+      await expect(challengesApi.getActive()).rejects.toThrow('Network request failed');
+    });
+
+    it('handles 404 errors', async () => {
+      const notFoundError = {
+        response: {
+          status: 404,
+          data: { message: 'Challenge not found' },
+        },
+      };
+
+      (apiClient.get as jest.Mock).mockRejectedValue(notFoundError);
+
+      await expect(challengesApi.get('nonexistent-id')).rejects.toEqual(notFoundError);
+    });
+
+    it('handles 500 server errors', async () => {
+      const serverError = {
+        response: {
+          status: 500,
+          data: { message: 'Internal server error' },
+        },
+      };
+
+      (apiClient.get as jest.Mock).mockRejectedValue(serverError);
+
+      await expect(challengesApi.getActive()).rejects.toEqual(serverError);
+    });
+
+    it('handles malformed response data', async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: undefined,
+      });
+
+      const result = await challengesApi.getActive();
+
+      // Should handle undefined data gracefully
+      expect(result).toEqual([]);
+    });
+
+    it('handles missing authorization for protected endpoints', async () => {
+      const authError = {
+        response: {
+          status: 401,
+          data: { message: 'Unauthorized' },
+        },
+      };
+
+      (apiClient.get as jest.Mock).mockRejectedValue(authError);
+
+      await expect(challengesApi.getMembership('challenge1', '')).rejects.toEqual(authError);
+    });
+  });
 });

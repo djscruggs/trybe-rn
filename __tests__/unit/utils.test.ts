@@ -15,20 +15,40 @@ describe('Logger Utility', () => {
     jest.clearAllMocks();
   });
 
-  it('should have debug method', () => {
-    expect(typeof logger.debug).toBe('function');
+  it('should log debug messages to console.log', () => {
+    const testMessage = 'test debug message';
+    const testData = { foo: 'bar' };
+
+    logger.debug(testMessage, testData);
+
+    // In test environment, __DEV__ should be true, so debug should call console.log
+    expect(console.log).toHaveBeenCalledWith(testMessage, testData);
   });
 
-  it('should have error method', () => {
-    expect(typeof logger.error).toBe('function');
+  it('should log error messages to console.error', () => {
+    const testError = 'test error message';
+    const errorDetails = { code: 500 };
+
+    logger.error(testError, errorDetails);
+
+    expect(console.error).toHaveBeenCalledWith(testError, errorDetails);
   });
 
-  it('should have info method', () => {
-    expect(typeof logger.info).toBe('function');
+  it('should log info messages to console.info', () => {
+    const testInfo = 'test info message';
+
+    logger.info(testInfo);
+
+    // In test environment, __DEV__ should be true, so info should call console.info
+    expect(console.info).toHaveBeenCalledWith(testInfo);
   });
 
-  it('should have warn method', () => {
-    expect(typeof logger.warn).toBe('function');
+  it('should log warning messages to console.warn', () => {
+    const testWarning = 'test warning message';
+
+    logger.warn(testWarning);
+
+    expect(console.warn).toHaveBeenCalledWith(testWarning);
   });
 });
 
