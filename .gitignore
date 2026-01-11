@@ -37,3 +37,7 @@ emulator.log
 *.backup
 
 .env.local
+
+# Test coverage
+coverage/
+.nyc_output/

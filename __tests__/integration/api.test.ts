@@ -1,0 +1,360 @@
+import { challengesApi } from '~/lib/api/challengesApi';
+import { API_HOST } from '~/lib/environment';
+import type { ChallengeSummary, Challenge, MemberChallenge, CheckIn } from '~/lib/types';
+
+// Mock environment
+jest.mock('~/lib/environment', () => ({
+  API_HOST: 'https://api.test.com',
+}));
+
+// Mock apiClient
+jest.mock('~/lib/api/client', () => ({
+  apiClient: {
+    get: jest.fn(),
+    post: jest.fn(),
+  },
+}));
+
+import { apiClient } from '~/lib/api/client';
+
+// Helper to create complete mock challenges
+const createMockChallengeSummary = (overrides?: Partial<ChallengeSummary>): ChallengeSummary => ({
+  id: 1,
+  name: 'Test Challenge',
+  description: 'A test challenge description',
+  mission: 'Test mission',
+  startAt: new Date('2024-01-01'),
+  endAt: new Date('2024-01-31'),
+  numDays: 30,
+  type: 'SCHEDULED' as const,
+  status: 'PUBLISHED' as const,
+  frequency: 'DAILY' as const,
+  coverPhotoMeta: {
+    url: 'https://example.com/image.jpg',
+    secure_url: 'https://example.com/image.jpg',
+    public_id: 'test-image',
+    format: 'jpg',
+    resource_type: 'image',
+  },
+  videoMeta: null,
+  icon: null,
+  color: '#FF5733',
+  categories: [],
+  reminders: true,
+  syncCalendar: false,
+  publishAt: new Date('2024-01-01'),
+  published: true,
+  public: true,
+  userId: 1,
+  likeCount: 0,
+  commentCount: 0,
+  _count: {
+    members: 10,
+    likes: 5,
+    comments: 3,
+  },
+  ...overrides,
+});
+
+const createMockChallenge = (overrides?: Partial<Challenge>): Challenge => ({
+  id: 1,
+  name: 'Test Challenge',
+  description: 'A test challenge description',
+  mission: 'Test mission',
+  startAt: new Date('2024-01-01'),
+  endAt: new Date('2024-01-31'),
+  numDays: 30,
+  type: 'SCHEDULED' as const,
+  status: 'PUBLISHED' as const,
+  frequency: 'DAILY' as const,
+  coverPhotoMeta: {
+    url: 'https://example.com/image.jpg',
+    secure_url: 'https://example.com/image.jpg',
+    public_id: 'test-image',
+    format: 'jpg',
+    resource_type: 'image',
+  },
+  videoMeta: null,
+  icon: null,
+  color: '#FF5733',
+  categories: [],
+  reminders: true,
+  syncCalendar: false,
+  publishAt: new Date('2024-01-01'),
+  published: true,
+  public: true,
+  userId: 1,
+  likeCount: 0,
+  commentCount: 0,
+  ...overrides,
+});
+
+const createMockMembership = (overrides?: Partial<MemberChallenge>): MemberChallenge => ({
+  id: 1,
+  userId: 1,
+  challengeId: 1,
+  cohortId: undefined,
+  user: {
+    id: 1,
+    email: 'test@example.com',
+    profile: {
+      id: 1,
+      userId: 1,
+      firstName: 'Test',
+      lastName: 'User',
+      fullName: 'Test User',
+      profileImage: null,
+    },
+    lastLogin: null,
+  },
+  challenge: createMockChallenge(),
+  lastCheckIn: null,
+  nextCheckIn: null,
+  dayNumber: 1,
+  notificationHour: null,
+  notificationMinute: null,
+  startAt: new Date('2024-01-01'),
+  createdAt: new Date('2024-01-01'),
+  ...overrides,
+});
+
+const createMockCheckIn = (overrides?: Partial<CheckIn>): CheckIn => ({
+  id: 1,
+  userId: 1,
+  challengeId: 1,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+  data: null,
+  body: 'Test check-in',
+  imageMeta: null,
+  videoMeta: null,
+  likeCount: 0,
+  commentCount: 0,
+  ...overrides,
+});
+
+describe('Challenges API', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('getActive', () => {
+    it('fetches active challenges without token', async () => {
+      const mockChallenges: ChallengeSummary[] = [
+        createMockChallengeSummary({ id: 1, name: 'Challenge 1' }),
+        createMockChallengeSummary({ id: 2, name: 'Challenge 2' }),
+      ];
+
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { challenges: mockChallenges },
+      });
+
+      const result = await challengesApi.getActive();
+
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `${API_HOST}/api/challenges/active`,
+        {}
+      );
+      expect(result).toEqual(mockChallenges);
+    });
+
+    it('fetches active challenges with token', async () => {
+      const mockChallenges: ChallengeSummary[] = [
+        createMockChallengeSummary({ id: 1, name: 'Challenge 1' }),
+      ];
+      const token = 'test-token';
+
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { challenges: mockChallenges },
+      });
+
+      const result = await challengesApi.getActive(token);
+
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `${API_HOST}/api/challenges/active`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      expect(result).toEqual(mockChallenges);
+    });
+
+    it('returns empty array when challenges is null', async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { challenges: null },
+      });
+
+      const result = await challengesApi.getActive();
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('get', () => {
+    it('fetches a single challenge by id', async () => {
+      const mockChallenge = createMockChallenge({
+        id: 1,
+        name: 'Challenge 1',
+        description: 'Test',
+      });
+
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: mockChallenge,
+      });
+
+      const result = await challengesApi.get('1');
+
+      expect(apiClient.get).toHaveBeenCalledWith(`${API_HOST}/api/challenges/v/1`);
+      expect(result).toEqual(mockChallenge);
+    });
+  });
+
+  describe('getProgram', () => {
+    it('fetches challenge program by id', async () => {
+      const mockProgram = { days: [], tasks: [] };
+
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: mockProgram,
+      });
+
+      const result = await challengesApi.getProgram('1');
+
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `${API_HOST}/api/challenges/v/1/program`
+      );
+      expect(result).toEqual(mockProgram);
+    });
+  });
+
+  describe('getMembership', () => {
+    it('fetches user membership for a challenge', async () => {
+      const mockMembership = createMockMembership({
+        id: 1,
+        userId: 1,
+        challengeId: 1,
+      });
+      const token = 'test-token';
+
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { membership: mockMembership },
+      });
+
+      const result = await challengesApi.getMembership('challenge1', token);
+
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `${API_HOST}/api/challenges/v/challenge1/membership`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      expect(result).toEqual(mockMembership);
+    });
+  });
+
+  describe('getCheckIns', () => {
+    it('fetches check-ins with token', async () => {
+      const mockCheckIns: CheckIn[] = [
+        createMockCheckIn({ id: 1, createdAt: new Date('2024-01-01') }),
+        createMockCheckIn({ id: 2, createdAt: new Date('2024-01-02') }),
+      ];
+      const token = 'test-token';
+
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { checkIns: mockCheckIns },
+      });
+
+      const result = await challengesApi.getCheckIns('challenge1', 'user1', token);
+
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `${API_HOST}/api/checkins/challenge1/user1`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      expect(result).toEqual(mockCheckIns);
+    });
+
+    it('fetches check-ins with cohort id', async () => {
+      const mockCheckIns: CheckIn[] = [
+        createMockCheckIn({ id: 1, createdAt: new Date('2024-01-01') }),
+      ];
+      const token = 'test-token';
+
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { checkIns: mockCheckIns },
+      });
+
+      const result = await challengesApi.getCheckIns('challenge1', 'user1', token, 123);
+
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `${API_HOST}/api/checkins/challenge1/user1/123`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      expect(result).toEqual(mockCheckIns);
+    });
+
+    it('returns empty array when checkIns is null', async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { checkIns: null },
+      });
+
+      const result = await challengesApi.getCheckIns('challenge1', 'user1', 'token');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('handles network errors gracefully', async () => {
+      (apiClient.get as jest.Mock).mockRejectedValue(
+        new Error('Network request failed')
+      );
+
+      await expect(challengesApi.getActive()).rejects.toThrow('Network request failed');
+    });
+
+    it('handles 404 errors', async () => {
+      const notFoundError = {
+        response: {
+          status: 404,
+          data: { message: 'Challenge not found' },
+        },
+      };
+
+      (apiClient.get as jest.Mock).mockRejectedValue(notFoundError);
+
+      await expect(challengesApi.get('nonexistent-id')).rejects.toEqual(notFoundError);
+    });
+
+    it('handles 500 server errors', async () => {
+      const serverError = {
+        response: {
+          status: 500,
+          data: { message: 'Internal server error' },
+        },
+      };
+
+      (apiClient.get as jest.Mock).mockRejectedValue(serverError);
+
+      await expect(challengesApi.getActive()).rejects.toEqual(serverError);
+    });
+
+    it('handles malformed response data', async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: undefined,
+      });
+
+      const result = await challengesApi.getActive();
+
+      // Should handle undefined data gracefully
+      expect(result).toEqual([]);
+    });
+
+    it('handles missing authorization for protected endpoints', async () => {
+      const authError = {
+        response: {
+          status: 401,
+          data: { message: 'Unauthorized' },
+        },
+      };
+
+      (apiClient.get as jest.Mock).mockRejectedValue(authError);
+
+      await expect(challengesApi.getMembership('challenge1', '')).rejects.toEqual(authError);
+    });
+  });
+});
