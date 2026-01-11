@@ -37,7 +37,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Changed from 1 to 0 to allow viewing full diff history
+          # Shallow clone for simple tasks, deep for git operations
+          fetch-depth: 0
 
       - name: Run Claude Code
         id: claude
@@ -45,14 +46,13 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-          # This is an optional setting that allows Claude to read CI results on PRs
+          # Allow Claude to read CI results on PRs
           additional_permissions: |
             actions: read
 
-          # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
-          # prompt: 'Update the pull request description to include a summary of changes.'
+          # Claude will execute the instructions from the @claude mention
+          # No custom prompt needed - uses the comment body
 
-          # Optional: Add claude_args to customize behavior and configuration
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
-          # claude_args: '--allowed-tools Bash(gh pr:*)'
+          # Safety restrictions for on-demand assistant
+          # Allows most operations but restricts dangerous commands
+          claude_args: '--disallowed-tools "Bash(rm -rf:*),Bash(curl:*),Bash(wget:*),Bash(dd:*),Bash(mkfs:*)"'

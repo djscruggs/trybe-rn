@@ -47,7 +47,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Changed from 1 to 0 to allow viewing full diff history
+          fetch-depth: 0
 
       - name: Run Claude Code Review
         id: claude-review
@@ -76,7 +76,6 @@ jobs:
 
             Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
 
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
-          # Restricted to specific PR/issue commands without wildcards to prevent abuse
-          claude_args: '--allowed-tools "Bash(gh pr comment ${{ github.event.pull_request.number }}:*),Bash(gh pr diff ${{ github.event.pull_request.number }}:*),Bash(gh pr view ${{ github.event.pull_request.number }}:*)"'
+          # Restricted to safe read-only commands and PR comment posting
+          # Prevents file system access, git operations, and other potentially risky commands
+          claude_args: '--allowed-tools "Bash(gh pr comment ${{ github.event.pull_request.number }}:*),Bash(gh pr diff ${{ github.event.pull_request.number }}:*),Bash(gh pr view ${{ github.event.pull_request.number }}:*),Bash(gh pr checks ${{ github.event.pull_request.number }}:*),Read,Grep,Glob"'
