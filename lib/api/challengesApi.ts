@@ -62,7 +62,7 @@ export const challengesApi = {
 
   joinOrLeave: async (
     id: string,
-    data: FormData | Record<string, never>,
+    data: FormData | Record<string, any>,
     token: string
   ): Promise<JoinChallengeResponse | null> => {
     const headers = { Authorization: `Bearer ${token}` };

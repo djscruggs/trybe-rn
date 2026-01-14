@@ -2,7 +2,7 @@ import '~/global.css';
 
 import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack, Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 import React from 'react';
 import Toast from 'react-native-toast-message';
 
@@ -12,6 +12,7 @@ import { UserProvider } from '~/contexts/currentuser-context';
 import { tokenCache } from '~/lib/cache';
 import { CLERK_PUBLISHABLE_KEY } from '~/lib/environment';
 import { initSentry } from '~/lib/sentry';
+import { usePushNotifications } from '~/lib/usePushNotifications';
 import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
@@ -52,6 +53,25 @@ if (__DEV__) {
 
 const queryClient = new QueryClient();
 
+// Inner component that uses Clerk hooks
+function AppContent() {
+  // Register for push notifications (must be inside ClerkProvider)
+  usePushNotifications();
+
+  return (
+    <UserProvider>
+      <ClerkLoaded>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        />
+      </ClerkLoaded>
+      <Toast />
+    </UserProvider>
+  );
+}
+
 export default Sentry.wrap(function RootLayout() {
   const publishableKey = CLERK_PUBLISHABLE_KEY;
   if (!publishableKey) {
@@ -63,16 +83,7 @@ export default Sentry.wrap(function RootLayout() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-          <UserProvider>
-            <ClerkLoaded>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                }}
-              />
-            </ClerkLoaded>
-            <Toast />
-          </UserProvider>
+          <AppContent />
         </ClerkProvider>
       </QueryClientProvider>
     </ErrorBoundary>
