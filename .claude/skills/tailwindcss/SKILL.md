@@ -1,15 +1,15 @@
 ---
 name: tailwindcss
 displayName: Tailwind CSS
-description: Tailwind CSS v4 utility-first styling patterns including responsive design, dark mode, and custom configuration. Use when styling with Tailwind, adding utility classes, configuring Tailwind, setting up dark mode, or customizing the theme.
+description: Tailwind CSS v3 utility-first styling patterns including responsive design, dark mode, and custom configuration. Use when styling with Tailwind, adding utility classes, configuring Tailwind, setting up dark mode, or customizing the theme.
 version: 1.0.0
 ---
 
-# Tailwind CSS v4 Development Guidelines
+# Tailwind CSS v3 Development Guidelines
 
-Best practices for using Tailwind CSS v4 utility classes effectively.
+Best practices for using Tailwind CSS v3 utility classes effectively.
 
-**Note**: Tailwind CSS v4 (released January 2025) uses a CSS-first configuration approach. If you need v3 compatibility, tailwind.config.js is still supported.
+**Note**: This project uses Tailwind CSS v3 with NativeWind for React Native. Configuration is in `tailwind.config.js`.
 
 ## Core Principles
 
@@ -190,12 +190,8 @@ Best practices for using Tailwind CSS v4 utility classes effectively.
 ## Dark Mode
 
 ```css
-/* Tailwind v4: Configure in app/globals.css */
-@import "tailwindcss";
-
-@media (prefers-color-scheme: dark) {
-  /* Or use class-based: .dark */
-}
+/* Configure dark mode in tailwind.config.js */
+/* darkMode: 'class' or 'media' */
 ```
 
 ```tsx
@@ -229,33 +225,10 @@ Best practices for using Tailwind CSS v4 utility classes effectively.
 
 ## Configuration
 
-### Tailwind v4: CSS-First Configuration
-
-```css
-/* app/globals.css */
-@import "tailwindcss";
-
-@theme {
-  /* Custom colors */
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-900: #1e3a8a;
-
-  /* Custom spacing */
-  --spacing-128: 32rem;
-
-  /* Custom fonts */
-  --font-family-sans: 'Inter', sans-serif;
-
-  /* Custom breakpoints */
-  --breakpoint-3xl: 1920px;
-}
-```
-
-### Tailwind v3 Config (Still Supported)
+### Tailwind v3 Config
 
 ```javascript
-// tailwind.config.js (optional in v4)
+// tailwind.config.js
 module.exports = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -309,15 +282,9 @@ npm install @tailwindcss/container-queries
 
 ## Performance
 
-### Automatic Content Detection
+### Content Configuration
 
-Tailwind v4 automatically detects and scans all template files - no `content` configuration needed.
-
-### Build Performance
-
-Tailwind v4 delivers 3.5x faster full builds (~100ms) compared to v3 using modern CSS features like `@property` and `color-mix()`.
-
-**Browser Requirements**: Safari 16.4+, Chrome 111+, Firefox 128+
+Ensure the `content` array in `tailwind.config.js` includes all template file paths so Tailwind can tree-shake unused styles in production.
 
 ## Common Patterns
 

@@ -347,26 +347,23 @@ const mutation = useMutation({
 
 ### Key Factories
 
-```typescript
-// features/posts/api/postKeys.ts
-export const postKeys = {
-  all: ['posts'] as const,
-  lists: () => [...postKeys.all, 'list'] as const,
-  list: (filters: string) => [...postKeys.lists(), { filters }] as const,
-  details: () => [...postKeys.all, 'detail'] as const,
-  detail: (id: string) => [...postKeys.details(), id] as const,
-  comments: (id: string) => [...postKeys.detail(id), 'comments'] as const,
-};
+This project uses a centralized `queryKeys` factory in `lib/api/queryKeys.ts`. Always import and reference `queryKeys` for both `queryKey` in `useQuery`/`useSuspenseQuery` and `queryClient.invalidateQueries`. Never use inline string arrays.
 
-// Usage
-const { data } = useSuspenseQuery({
-  queryKey: postKeys.detail(postId),
-  queryFn: () => postsApi.get(postId),
+```typescript
+// lib/api/queryKeys.ts (project-specific)
+import { queryKeys } from '~/lib/api/queryKeys';
+
+// Usage in components
+const { data } = useQuery({
+  queryKey: queryKeys.challenges.active(),
+  queryFn: () => challengesApi.getActive(token),
 });
 
-// Invalidate all post lists
-queryClient.invalidateQueries({ queryKey: postKeys.lists() });
+// Invalidation
+queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
 ```
+
+Each domain (challenges, posts, users, comments, categories) has an `all` base key and derivative functions that spread the parent key. All key arrays use `as const` for type safety.
 
 ---
 

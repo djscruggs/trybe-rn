@@ -1,19 +1,17 @@
 ---
 name: react
-description: Core React 19 patterns including hooks, Suspense, lazy loading, component structure, TypeScript best practices, and performance optimization. Use when working with React components, hooks, lazy loading, Suspense boundaries, or React-specific TypeScript patterns.
+description: Core React 18 patterns including hooks, Suspense, lazy loading, component structure, TypeScript best practices, and performance optimization. Use when working with React components, hooks, lazy loading, Suspense boundaries, or React-specific TypeScript patterns.
 ---
 
 # React Core Patterns
 
 ## Purpose
 
-Essential React 19 patterns for building modern applications with hooks, Suspense, lazy loading, and TypeScript.
+Essential React 18 patterns for building modern applications with hooks, Suspense, lazy loading, and TypeScript.
 
-**Note**: React 19 (released December 2024) breaking changes:
-- `forwardRef` no longer needed - pass `ref` as a prop directly
-- `propTypes` removed (silently ignored)
-- New JSX transform required
+**Note**: This project uses React 18.3.1 with React Native 0.76.
 - `React.FC` type discouraged - use direct function components instead
+- `forwardRef` is still required in React 18 for forwarding refs
 
 ## When to Use This Skill
 
@@ -73,7 +71,7 @@ Creating a React component? Follow this:
 - [ ] Wrap lazy components in `<Suspense>` with fallback
 - [ ] Default export at bottom
 - [ ] No conditional hooks (hooks must be called in same order)
-- [ ] Pass `ref` as a prop (no `forwardRef` needed in React 19)
+- [ ] Use `forwardRef` when exposing refs to parent components
 
 ---
 
