@@ -165,10 +165,10 @@ echo '{"session_id":"test","prompt":"your test prompt"}' | \
   npx tsx .claude/hooks/skill-activation-prompt.ts
 ```
 
-**Test PreToolUse:**
+**Test error-handling-reminder (Stop hook):**
 ```bash
-cat <<'EOF' | npx tsx .claude/hooks/skill-verification-guard.ts
-{"session_id":"test","tool_name":"Edit","tool_input":{"file_path":"test.ts"}}
+cat <<'EOF' | npx tsx .claude/hooks/error-handling-reminder.ts
+{"session_id":"test"}
 EOF
 ```
 
@@ -393,9 +393,9 @@ Test hooks manually:
 # UserPromptSubmit
 echo '{"prompt":"test"}' | npx tsx .claude/hooks/skill-activation-prompt.ts
 
-# PreToolUse
-cat <<'EOF' | npx tsx .claude/hooks/skill-verification-guard.ts
-{"tool_name":"Edit","tool_input":{"file_path":"test.ts"}}
+# Error handling reminder (Stop hook)
+cat <<'EOF' | npx tsx .claude/hooks/error-handling-reminder.ts
+{"session_id":"test"}
 EOF
 ```
 

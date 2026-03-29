@@ -27,9 +27,12 @@ This repository (`trybe-rn`) contains the **mobile client** for the Trybe applic
   - **`(tabs)/`**: Main tab-based navigation layout.
     - `index.tsx`: Home/Challenges list.
     - `new.tsx`: Create new challenge (protected).
-    - `about/`: About screen.
+    - `about.tsx`: About screen.
     - `profile.tsx`: User profile (protected).
-    - `sign-up.tsx`: Auth entry point.
+    - `my-challenges.tsx`: User's challenges list.
+    - `challenges/`: Challenge detail screens (nested routes).
+    - `sign-in.tsx`: Sign in screen.
+    - `sign-up.tsx`: Sign up screen.
 - **`components/`**: Reusable UI components.
 - **`contexts/`**: React Context providers (e.g., `CurrentUserContext`).
 - **`lib/`**: Utilities, environment configuration, and helpers.
@@ -194,38 +197,9 @@ The file `scratchpad/MOBILE_CLIENT_PROCESSES.md` serves as the **API Contract** 
 
 - **Relevance**: While the file describes the *backend* implementation (Remix loaders, server-side code), the **API Endpoints** and **Data Models** it lists are the exact ones consumed by this React Native app.
 - **Verified Endpoints**:
-  - `GET /api/challenges/active` (Used in `app/index.tsx`)
-  - `GET /api/challenges/v/:id/program` (Used in `app/challenges/[id]/program.tsx`)
+  - `GET /api/challenges/active` (Used in `app/(tabs)/index.tsx`)
+  - `GET /api/challenges/v/:id/program` (Used in `app/(tabs)/challenges/[id]/program.tsx`)
 - **Usage Pattern**: The app uses `axios` and `TanStack Query` to fetch data from these endpoints, expecting the JSON structures defined in that document.
-
-## Issue Tracking (Beads)
-
-This project uses **Beads** for issue tracking, an AI-native tool that lives directly in the codebase.
-
-### Essential Commands
-
-```bash
-# Create new issues
-bd create "Add user authentication"
-
-# View all issues
-bd list
-
-# View issue details
-bd show <issue-id>
-
-# Update issue status
-bd update <issue-id> --status in-progress
-bd update <issue-id> --status done
-
-# Sync with git remote
-bd sync
-```
-
-### Key Features
-- **Git-native**: Issues are stored in `.beads/issues.jsonl` and synced with your code.
-- **AI-friendly**: Designed for CLI usage and AI agents.
-
 
 
 **Important**
@@ -247,3 +221,31 @@ blz add bun https://bun.sh/llms.txt
 blz add turborepo https://turborepo.com/llms.txt
 ```
 - The current year is 2026. When searching, make sure you include the current year.
+
+## Coding Conventions
+
+### Component Files
+
+- Name all React Native component files in PascalCase (e.g., `ChallengeListItem.tsx`, `CheckInModal.tsx`, `BackButton.tsx`).
+- Use NativeWind `className` strings for styling instead of `StyleSheet.create` objects.
+
+### Logging
+
+- Use the custom `logger` utility from `~/lib/logger` for all logging instead of raw `console.log` / `console.error`.
+- Use `logger.debug()` for development logging and `logger.error()` for errors.
+
+### Types
+
+- All domain types live in `lib/types.ts`. Use base interfaces (e.g., `Challenge`, `Post`) and extended Summary interfaces (e.g., `ChallengeSummary`, `PostSummary`) that add `_count` aggregation fields.
+- API methods returning lists must use the Summary variant (e.g., `ChallengeSummary[]` not `Challenge[]`) when aggregate counts are included.
+
+### API Service Layer
+
+- Organize API interactions as domain-specific `const` object literals (e.g., `challengesApi`, `categoriesApi`, `commentsApi`) in `lib/api/`.
+- Each method is an `async` arrow function with explicit TypeScript return types.
+- Pass auth tokens as explicit function parameters — never read auth state inside the API layer.
+- Default nullable list fields to empty arrays (`|| []`) in the service layer to prevent null propagation to consumers.
+
+### Query Keys
+
+- Use the centralized `queryKeys` factory in `lib/api/queryKeys.ts` for all TanStack Query `queryKey` and `queryClient.invalidateQueries` calls. Never use inline string arrays for query keys.
