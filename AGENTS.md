@@ -249,3 +249,31 @@ blz add turborepo https://turborepo.com/llms.txt
 ### Query Keys
 
 - Use the centralized `queryKeys` factory in `lib/api/queryKeys.ts` for all TanStack Query `queryKey` and `queryClient.invalidateQueries` calls. Never use inline string arrays for query keys.
+
+## GitHub and PR Workflow
+
+When interfacing with Github, use the Github CLI. Assume the user is already authenticated correctly.
+
+When asked to submit or create a PR, follow this process:
+
+1. `git status` - check if there are any changes to commit
+2. `git add .` - add all changes to the staging area (IF NEEDED)
+3. `git commit -m "your commit message"` - commit the changes (IF NEEDED)
+4. `git push` - push the changes to the remote repository (IF NEEDED)
+5. `git branch` - check the current branch
+6. `git log main..[insert current branch]` - log the changes made to the current branch
+7. `git diff --name-status main` - check what files have been changed
+8. `gh pr create --title "Title goes here..." --body "Example body..."`
+
+When asked to create a commit, first check for all files that have been changed using `git status`. Then create a commit with a message that briefly describes the changes either for each file individually or in a single commit if the changes are minor.
+
+When writing a message for the PR, don't include new lines in the message. Just write a single long message.
+
+## General Coding Practices
+
+- When planning a complex code change, always start with a plan of action and then ask for approval on that plan.
+- For simple changes, just make the code change but always think carefully and step-by-step about the change itself.
+- When a file becomes too long, split it into smaller files.
+- When a function becomes too long, split it into smaller functions.
+- When debugging a problem, make sure you have sufficient information to deeply understand the problem. More often than not, opt in to adding more logging and tracing to the code to help you understand the problem before making any changes. If you are provided logs that make the source of the problem obvious, then implement a solution. If you're still not 100% confident about the source of the problem, then reflect on 4-6 different possible sources of the problem, distill those down to 1-2 most likely sources, and then implement a solution for the most likely source - either adding more logging to validate your theory or implement the actual fix if you're extremely confident about the source of the problem.
+- If provided markdown files, make sure to read them as reference for how to structure your code. Do not update the markdown files at all. Only use them for reference and examples of how to structure your code.
